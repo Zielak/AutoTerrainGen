@@ -16,6 +16,8 @@ import mint.render.luxe.LuxeMintRender;
 import mint.render.luxe.Convert;
 import mint.layout.margins.Margins;
 
+using StringTools;
+
 class Main extends luxe.Game {
 
     /**
@@ -27,6 +29,8 @@ class Main extends luxe.Game {
      * TODO: to change
      */
     public static var tile_size:Int = 16;
+
+    var generator:Generator;
 
     var tilesets:Array<TileSet>;
 
@@ -42,6 +46,9 @@ class Main extends luxe.Game {
     var load_button:mint.Button;
     var generate_button:mint.Button;
 
+    var window_tileset:mint.Window;
+    var tiles_list:mint.List;
+    var tileset_title:mint.Label;
 
 
     override function config(config:luxe.AppConfig) {
@@ -60,7 +67,7 @@ class Main extends luxe.Game {
 
         init_canvas();
         
-        var generator:Generator = new Generator();
+        generator = new Generator();
 
     } //ready
 
@@ -87,6 +94,46 @@ class Main extends luxe.Game {
         });
 
         create_window1();
+        create_window_tileset();
+
+    }
+
+    function create_window_tileset() {
+
+        window_tileset = new mint.Window({
+            parent: canvas,
+            name: 'window_tileset',
+            title: 'Tileset Preview',
+            options: {
+                color:new Color().rgb(0x121212),
+                color_titlebar:new Color().rgb(0x191919),
+                label: { color:new Color().rgb(0x06b4fb) },
+                close_button: { color:new Color().rgb(0x06b4fb) },
+            },
+            x:450, y:10, w:150, h: 400,
+            w_min: 150, h_min:256,
+            collapsible:true,
+            closable: false,
+        });
+
+        tileset_title = new mint.Label({
+            parent: window_tileset,
+            text: 'Select tileset first',
+            text_size: 14,
+            align: right,
+            x:4, y:30, w:150, h: 30,
+        });
+        layout.margin(tileset_title, right, fixed, 4);
+        layout.margin(tileset_title, left, fixed, 4);
+
+
+        tiles_list = new mint.List({
+            parent: window_tileset,
+            name: 'list',
+            x: 4, y: 60, w: 150, h: 60-100-4
+        });
+        layout.margin(tiles_list, right, fixed, 4);
+        layout.margin(tiles_list, bottom, fixed, 4);
 
     }
 
@@ -122,6 +169,8 @@ class Main extends luxe.Game {
         });
         layout.margin(path_input, right, fixed, 58);
 
+
+
         load_button = new mint.Button({
             parent: window1,
             name: 'load',
@@ -130,6 +179,11 @@ class Main extends luxe.Game {
             x: 345, y: 35, w: 54, h: 28,
         });
         layout.anchor(load_button, right, right);
+        load_button.onmouseup.listen(function(e,_){
+            load_tileset( path_input.text );
+        });
+
+
 
         generate_button = new mint.Button({
             parent: window1,
@@ -139,11 +193,11 @@ class Main extends luxe.Game {
             x: 4, y: 65, w: 400, h: 28,
         });
         layout.margin(generate_button, right, fixed, 2);
-
-
-        load_button.onmouseup.listen(function(e,_){
-            load_tileset( path_input.text );
+        generate_button.onmouseup.listen(function(e,_){
+            generator.generate( tilesets );
         });
+
+
 
         tilesets_list = new mint.List({
             parent: window1,
@@ -154,6 +208,9 @@ class Main extends luxe.Game {
 
         layout.margin(tilesets_list, right, fixed, 4);
         layout.margin(tilesets_list, bottom, fixed, 4);
+        tilesets_list.onselect.listen(function(idx,_,_){
+            tileset_preview_show(idx);
+        });
 
 
     } //create_window1
@@ -185,9 +242,54 @@ class Main extends luxe.Game {
 
         return _panel;
 
-    } //create_block
+    } //create_tileset_li
 
 
+    function create_tile_li(tile:Tile) {
+
+        var _panel = new mint.Panel({
+            parent: tiles_list,
+            name: 'panel_${tile.flag}',
+            x:4, y:4, w:150, h:24,
+        });
+
+        layout.margin(_panel, right, fixed, 4);
+
+        new mint.Image({
+            parent: _panel, name: 'icon_${tile.flag}',
+            x:3, y:3, w:Main.tile_size, h:Main.tile_size,
+            path: tile.id,
+        });
+
+        var _title = new mint.Label({
+            parent: _panel,
+            name: 'label_${tile.id}',
+            mouse_input:true, x:24, y:2, w:148, h:18, text_size: 14,
+            align: TextAlign.left, align_vertical: TextAlign.top,
+            // text: '0x${StringTools.hex(tile.flag)}',
+            text: '0x${tile.flag.hex()}',
+        });
+
+        layout.margin(_title, right, fixed, 8);
+
+        return _panel;
+
+    } //create_tile_li
+
+
+    function tileset_preview_show(idx:Int) {
+
+        tileset_title.text = tilesets[idx].id;
+
+        tiles_list.clear();
+
+        for(t in tilesets[idx].tiles){
+
+            tiles_list.add_item( create_tile_li(t) );
+
+        }
+
+    }
 
 
     override function onrender() {
@@ -248,8 +350,10 @@ class Main extends luxe.Game {
 
         load.then(function(e:Texture){
 
-            var tileset:TileSet = new TileSet(e);
-            tilesets_list.add_item( create_tileset_li(tileset) );
+            var ts:TileSet = new TileSet(e);
+            tilesets_list.add_item( create_tileset_li(ts) );
+
+            tilesets.push(ts);
 
         });
 

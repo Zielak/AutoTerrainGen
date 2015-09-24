@@ -24,20 +24,25 @@ class Generator {
 
     }
 
-    public static function generate( tilesets:Array<TileSet> ) {
+    public function generate( tilesets:Array<TileSet> ) {
 
+        // Has only combination of tileset with void
+        // Thats actually the same as input...
         if(tilesets.length == 1){
-            stage_1();
+           // stage_1();
+           trace('no work needed to do');
         }
+        // Max 2 types +void on one tile
         if(tilesets.length == 2){
             stage_2();
         }
-        if(tilesets.length == 3){
-            stage_3();
-        }
-        if(tilesets.length == 4){
-            stage_4();
-        }
+
+    }
+
+
+    function stage_2() {
+
+
 
     }
 
