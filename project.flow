@@ -2,7 +2,7 @@
 
   luxe:{
     window: {
-      width:960,
+      width:640,
       height:640,
       title:'Auto Terrain Generator for Tiled',
       fullscreen:false,
