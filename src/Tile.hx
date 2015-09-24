@@ -14,31 +14,51 @@ class Tile {
      * |---+---|
      */
 
-    public static inline var T1:Int = 0x0001;
-    public static inline var T2:Int = 0x0010;
-    public static inline var T3:Int = 0x0100;
-    public static inline var T4:Int = 0x1000;
+    public static inline var T1:Hex = 0x0001;
+    public static inline var T2:Hex = 0x0010;
+    public static inline var T3:Hex = 0x0100;
+    public static inline var T4:Hex = 0x1000;
 
-    var texture:Texture;
+    public var texture:Texture;
 
     public var pixels:Uint8Array;
-    public var flag:Int;
+    public var flag:Hex;
 
     var foreign_id:String;
-    public var id:String;
+    public var id:String = '';
 
-    public function new(p:Uint8Array, f:Int, _id:String){
+    public function new(?p:Uint8Array, ?f:Hex = 0x1111, ?_id:String){
 
-        pixels = p;
+        
+        if(_id != null) foreign_id = _id;
+
+        // Is it part of tileset or tile ready for the output?
         flag = f;
 
-        foreign_id = _id;
-        id = '${foreign_id}_${flag}';
+        // Get pixels straight from above or prepare empty place
+        if(p != null){
+            pixels = p;
+            prepare_texture();
+        }else{
+            pixels = new Uint8Array(Main.tile_size*Main.tile_size*4);
+        }
 
-        // Luxe.resources.add( new luxe.resource.Resource.Resource({
-        //     resource_type: ResourceType.texture,
-        //     id: id,
-        // }) );
+
+
+    }
+
+    /**
+     * Not all tiles are used to be visible in UI.
+     * Use this to change this one in usable Texture
+     * @return ID of texture to get
+     */
+    function prepare_texture(){
+
+        if(texture != null){
+            return;
+        }
+
+        id = '${foreign_id}_${flag}';
 
         texture = new Texture({
             pixels: pixels,
@@ -51,11 +71,7 @@ class Tile {
 
         Luxe.resources.add(texture);
 
-
     }
 
-    public function get_corner(){
-
-    }
 
 }

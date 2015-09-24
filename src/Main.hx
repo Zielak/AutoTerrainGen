@@ -16,7 +16,6 @@ import mint.render.luxe.LuxeMintRender;
 import mint.render.luxe.Convert;
 import mint.layout.margins.Margins;
 
-using StringTools;
 
 class Main extends luxe.Game {
 
@@ -41,10 +40,11 @@ class Main extends luxe.Game {
     var layout: Margins;
 
     var window1:mint.Window;
-    var tilesets_list:mint.List;
     var path_input:mint.TextEdit;
     var load_button:mint.Button;
     var generate_button:mint.Button;
+    var config_text:mint.Label;
+    var tilesets_list:mint.List;
 
     var window_tileset:mint.Window;
     var tiles_list:mint.List;
@@ -66,8 +66,14 @@ class Main extends luxe.Game {
         
 
         init_canvas();
+        init_events();
         
         generator = new Generator();
+
+        // load_tileset('/assets/dirt16.gif');
+        // load_tileset('/assets/grass16.gif');
+        // load_tileset('/assets/template16.gif');
+        // load_tileset('/assets/tiles16.gif');
 
     } //ready
 
@@ -95,6 +101,15 @@ class Main extends luxe.Game {
 
         create_window1();
         create_window_tileset();
+
+    }
+
+    function init_events() {
+
+        Luxe.events.listen('config_text.update', function(e:String){
+            config_text.text = e;
+            trace(e);
+        });
 
     }
 
@@ -130,10 +145,10 @@ class Main extends luxe.Game {
         tiles_list = new mint.List({
             parent: window_tileset,
             name: 'list',
-            x: 4, y: 60, w: 150, h: 60-100-4
+            x: 6, y: 60, w: 150, h: 60-100-4
         });
-        layout.margin(tiles_list, right, fixed, 4);
-        layout.margin(tiles_list, bottom, fixed, 4);
+        layout.margin(tiles_list, right, fixed, 6);
+        layout.margin(tiles_list, bottom, fixed, 8);
 
     }
 
@@ -190,12 +205,24 @@ class Main extends luxe.Game {
             name: 'generate',
             text: 'Generate!',
             options: { view: { color:new Color().rgb(0x008800) } },
-            x: 4, y: 65, w: 400, h: 28,
+            x: 4, y: 95, w: 400, h: 28,
         });
         layout.margin(generate_button, right, fixed, 2);
         generate_button.onmouseup.listen(function(e,_){
-            generator.generate( tilesets );
+            generator.update_tilesets(tilesets);
+            generator.generate();
         });
+
+
+        config_text = new mint.Label({
+            parent: window1,
+            text: 'Load the tileset first.',
+            text_size: 14,
+            align: left,
+            x:4, y:65, w:150, h: 30,
+        });
+        layout.margin(config_text, right, fixed, 4);
+        layout.margin(config_text, left, fixed, 4);
 
 
 
@@ -203,7 +230,7 @@ class Main extends luxe.Game {
             parent: window1,
             name: 'list',
             options: { view: { color:new Color().rgb(0x19191c) } },
-            x: 4, y: 100, w: 248, h: 400-100-4
+            x: 4, y: 130, w: 248, h: 400-130-4
         });
 
         layout.margin(tilesets_list, right, fixed, 4);
@@ -220,14 +247,14 @@ class Main extends luxe.Game {
         var _panel = new mint.Panel({
             parent: tilesets_list,
             name: 'panel_${tileset.id}',
-            x:2, y:4, w:236, h:96,
+            x:2, y:4, w:236, h:74,
         });
 
         layout.margin(_panel, right, fixed, 8);
 
         new mint.Image({
             parent: _panel, name: 'icon_${tileset.id}',
-            x:8, y:8, w:80, h:80,
+            x:4, y:4, w:64, h:64,
             path: tileset.id
         });
 
@@ -250,24 +277,24 @@ class Main extends luxe.Game {
         var _panel = new mint.Panel({
             parent: tiles_list,
             name: 'panel_${tile.flag}',
-            x:4, y:4, w:150, h:24,
+            x:4, y:4, w:150, h:Main.tile_size*2+8,
         });
 
         layout.margin(_panel, right, fixed, 4);
 
         new mint.Image({
             parent: _panel, name: 'icon_${tile.flag}',
-            x:3, y:3, w:Main.tile_size, h:Main.tile_size,
+            x:4, y:4, w:Main.tile_size*2, h:Main.tile_size*2,
             path: tile.id,
         });
 
         var _title = new mint.Label({
             parent: _panel,
             name: 'label_${tile.id}',
-            mouse_input:true, x:24, y:2, w:148, h:18, text_size: 14,
+            mouse_input:true, x:Main.tile_size*2+8, y:4, w:148, h:18, text_size: 14,
             align: TextAlign.left, align_vertical: TextAlign.top,
             // text: '0x${StringTools.hex(tile.flag)}',
-            text: '0x${tile.flag.hex()}',
+            text: '${tile.flag}',
         });
 
         layout.margin(_title, right, fixed, 8);
@@ -355,7 +382,14 @@ class Main extends luxe.Game {
 
             tilesets.push(ts);
 
+            generator.update_tilesets(tilesets);
+
+        },
+        function(_){
+            Luxe.resources.remove( Luxe.resources.texture(url) );
+            trace('FAILED to load');
         });
+
 
     }
 
