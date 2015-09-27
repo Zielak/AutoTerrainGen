@@ -74,10 +74,10 @@ class Main extends luxe.Game {
         init_events();
         
 
-        load_tileset('/assets/dirt16.gif');
-        load_tileset('/assets/grass16.gif');
         load_tileset('/assets/template16.gif');
         load_tileset('/assets/tiles16.gif');
+        load_tileset('/assets/dirt16.gif');
+        load_tileset('/assets/grass16.gif');
 
     } //ready
 
@@ -128,6 +128,46 @@ class Main extends luxe.Game {
             });
         });
 
+        Luxe.events.listen('tilesets_list.goup', function(o:ControlEvent){
+
+            var idx = tilesets_list.items.indexOf(o.ctrl);
+            var nidx = idx-1;
+
+            if(nidx < 0) return;
+
+            var swapper = tilesets[nidx];
+            tilesets.splice(nidx, 1);
+            tilesets.insert(nidx+1, swapper);
+            
+            tilesets_list.clear();
+            for(ts in tilesets){
+                tilesets_list.add_item( create_tileset_li(ts) );
+            }
+
+            generator.update_tilesets(tilesets);
+        } );
+
+        Luxe.events.listen('tilesets_list.godown', function(o:ControlEvent){
+
+            var idx = tilesets_list.items.indexOf(o.ctrl);
+            var nidx = idx+1;
+
+            if(nidx > tilesets.length-1) return;
+
+            var swapper = tilesets[nidx];
+            tilesets.splice(nidx, 1);
+            tilesets.insert(nidx-1, swapper);
+            
+            tilesets_list.clear();
+            for(ts in tilesets){
+                tilesets_list.add_item( create_tileset_li(ts) );
+            }
+
+            generator.update_tilesets(tilesets);
+        });
+        
+            
+
     }
 
     function create_window_tileset() {
@@ -142,7 +182,7 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:450, y:400, w:150, h: 400,
+            x:450, y:360, w:150, h: 300,
             w_min: 150, h_min:256,
             collapsible:true,
             closable: false,
@@ -181,7 +221,7 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:10, y:400, w:400, h: 400,
+            x:10, y:360, w:400, h: 400,
             w_min: 256, h_min:256,
             collapsible:true,
             closable: false,
@@ -252,9 +292,9 @@ class Main extends luxe.Game {
 
         layout.margin(tilesets_list, right, fixed, 4);
         layout.margin(tilesets_list, bottom, fixed, 4);
-        tilesets_list.onselect.listen(function(idx,_,_){
-            tileset_preview_show(idx);
-        });
+        // tilesets_list.onselect.listen(function(idx,_,_){
+        //     tileset_preview_show(idx);
+        // });
 
 
     } //create_window1
@@ -307,6 +347,32 @@ class Main extends luxe.Game {
             align: TextAlign.left, align_vertical: TextAlign.top,
             text: tileset.id,
         });
+        _title.onmouseup.listen(function(e,ctrl){
+            var idx = tilesets_list.items.indexOf(ctrl.parent);
+            tileset_preview_show(idx);
+        });
+
+        var _order_up = new mint.Button({
+            parent: _panel, name: 'button_${tileset.id}_orderup',
+            text: 'up ^',
+            x:96, y:36, w:40, h:18, text_size: 16,
+            align: TextAlign.center,
+        });
+        _order_up.onmouseup.listen(function(e,ctrl){
+            Luxe.events.fire('tilesets_list.goup', {event: e, ctrl: ctrl.parent});
+        });
+
+
+        var _order_down = new mint.Button({
+            parent: _panel, name: 'button_${tileset.id}_orderdown',
+            text: 'down v',
+            x:96+40, y:36, w:64, h:18, text_size: 16,
+            align: TextAlign.center,
+        });
+        _order_down.onmouseup.listen(function(e,ctrl){
+            Luxe.events.fire('tilesets_list.godown', {event: e, ctrl: ctrl.parent});
+        });
+
 
         layout.margin(_title, right, fixed, 8);
 
@@ -438,3 +504,9 @@ class Main extends luxe.Game {
 
 
 } //Main
+
+
+typedef ControlEvent = {
+     var event:MouseEvent;
+     var ctrl:Control;
+}
