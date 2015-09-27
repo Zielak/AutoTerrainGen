@@ -57,7 +57,7 @@ class Generator {
         if(tilesets.length >= 2){
 
             for(i in 0...tilesets.length){
-                main_3(i);
+                main(i);
             }
 
         }
@@ -69,10 +69,7 @@ class Generator {
 
     }
 
-    /**
-     * All combinations with 3 pieces of main thing
-     */
-    function main_3( main:Int ) {
+    function main( main:Int ) {
 
         // Which pieces to generate?
         var piece_gen:Int;
@@ -85,46 +82,60 @@ class Generator {
 
         var tile:Tile;
 
+
+
+
+
         inline function main_pieces(_flag:Int = 0){
             if(_flag == 0) _flag = piece_main;
             _pixels = tilesets[main].get(_flag);
             tile.add_ontop(_pixels);
         }
+
         inline function other_pieces(i:Int, ?_flag:Int = 0){
             if(_flag == 0) _flag = piece_gen;
             _pixels = tilesets[i].get(_flag);
             tile.add_ontop(_pixels);
         }
+
         // Puts all the pieces together in one tile
-        inline function add_pieces(i:Int){
+        // used in "max 2 different tiles"
+        inline function add_pieces_2(i:Int){
 
             if(i > main){
                 main_pieces(Tile.WHOLE);
                 other_pieces(i);
             }else if(i < main){
-                other_pieces(i);
+                other_pieces(i, Tile.WHOLE);
                 main_pieces();
             }else{
                 // Void
                 main_pieces();
             }
         }
+
         // 
         inline function walk_tilesets(){
 
+            // 2 different tiles
             for(i in 0...tilesets.length) {
 
                 tile = new Tile();
-
-                add_pieces(i);
-
+                add_pieces_2(i);
                 output_tiles.push( tile );
             }
+
+            // 3 different tiles in one
+            // Ones and Twos. Threes won't fit 4th different tile.
             
+            // TODO
+
         }
 
 
-        // Threes (3 pieces of the same tile)
+
+
+        // Threes (3 pieces of the main tile)
 
         /**
          * |---+---|
@@ -177,7 +188,7 @@ class Generator {
 
 
 
-        // Twos (2 pieces of the same tile)
+        // Twos (2 pieces of the main tile)
 
         /**
          * |---+---|
@@ -244,6 +255,53 @@ class Generator {
         piece_gen = T1 | T2;
         piece_main = T3 | T4;
         walk_tilesets();
+
+
+        // Ones (one piece of the main tile)
+
+        /**
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         */
+        piece_gen = T2 | T3 | T4;
+        piece_main = T1;
+        walk_tilesets();
+
+        /**
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         */
+        piece_gen = T1 | T3 | T4;
+        piece_main = T2;
+        walk_tilesets();
+
+        /**
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         */
+        piece_gen = T1 | T2 | T4;
+        piece_main = T3;
+        walk_tilesets();
+
+        /**
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         */
+        piece_gen = T1 | T2 | T3;
+        piece_main = T4;
+        walk_tilesets();
     }
 
 
@@ -271,7 +329,7 @@ class Generator {
 
         }
 
-        Luxe.events.fire('config_text.update', '${tile_count} tiles.');
+        Luxe.events.fire('config_text.update', 'Predicting ${tile_count} tiles.');
 
     }
 
