@@ -91,7 +91,7 @@ class Main extends luxe.Game {
             name:'canvas',
             rendering: rendering,
             options: { color:new Color(1,1,1,0.0) },
-            x: 0, y:0, w: 960, h: 640
+            x: 0, y:0, w: Luxe.screen.w, h: Luxe.screen.h
         });
 
         disp = new Text({
@@ -101,6 +101,7 @@ class Main extends luxe.Game {
             align_vertical: luxe.TextAlign.bottom,
             point_size: 15,
             text: 'usage text goes here'
+            x: 0, y:0, w: 960, h: 640
         });
 
         create_window_output();
@@ -123,7 +124,7 @@ class Main extends luxe.Game {
             output_image = new mint.Image({
                 parent: output_scroll,
                 name: 'image_output',
-                x:0, y:0, w:generator.w * 4, h:generator.h * 4,
+                x:0, y:0, w:generator.w * 2, h:generator.h * 2,
                 path: 'output'
             });
         });
@@ -261,30 +262,28 @@ class Main extends luxe.Game {
 
     function create_window_output(){
 
-        window_output = new mint.Window({
-            parent: canvas,
-            name: 'window_output',
-            title: 'Output preview',
-            options: {
-                color:new Color().rgb(0x121212),
-                color_titlebar:new Color().rgb(0x191919),
-                label: { color:new Color().rgb(0x06b4fb) },
-                close_button: { color:new Color().rgb(0x06b4fb) },
-            },
-            x:10, y:10, w:Luxe.screen.width-40, h: 380,
-            w_min: 100, h_min:64,
-            collapsible:true,
-            closable: false,
-        });
+        // window_output = new mint.Window({
+        //     parent: canvas,
+        //     name: 'window_output',
+        //     title: 'Output preview',
+        //     options: {
+        //         color:new Color().rgb(0x121212),
+        //         color_titlebar:new Color().rgb(0x191919),
+        //         label: { color:new Color().rgb(0x06b4fb) },
+        //         close_button: { color:new Color().rgb(0x06b4fb) },
+        //     },
+        //     x:10, y:10, w:Luxe.screen.width-40, h: 380,
+        //     w_min: 100, h_min:64,
+        //     collapsible:false,
+        //     closable: false,
+        // });
 
         output_scroll = new mint.Scroll({
-            parent: window_output,
+            parent: canvas,
             name: 'scroll1',
             options: { color_handles:new Color().rgb(0xffffff) },
-            x:4, y:30, w: 200, h: 100,
+            x:0, y:0, w: Luxe.screen.w-10, h: Luxe.screen.h/2 - 50,
         });
-        layout.margin(output_scroll, bottom, fixed, 8);
-        layout.margin(output_scroll, right, fixed, 4);
     }
 
     function create_tileset_li(tileset:TileSet) {
