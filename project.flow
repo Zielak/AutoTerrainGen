@@ -3,7 +3,7 @@
   luxe:{
     window: {
       width:640,
-      height:640,
+      height:800,
       title:'Auto Terrain Generator for Tiled',
       fullscreen:false,
       resizable:true,
@@ -13,7 +13,7 @@
 
   project : {
     name : 'AutoTerrainGen',
-    version : '0.0.1',
+    version : '0.0.2',
     author : 'Darek Greenly',
 
     app : {
