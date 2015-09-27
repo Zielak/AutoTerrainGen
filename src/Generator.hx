@@ -6,6 +6,12 @@ import snow.api.buffers.Uint8Array;
 
 class Generator {
 
+    public static inline var T1:Hex = 0x0001;
+    public static inline var T2:Hex = 0x0010;
+    public static inline var T3:Hex = 0x0100;
+    public static inline var T4:Hex = 0x1000;
+    public static inline var WHOLE:Hex = 0x1111;
+
     var tile_count:Int;
     var out_width:Int;
     var out_height:Int;
@@ -69,10 +75,10 @@ class Generator {
     function main_3( main:Int ) {
 
         // Which pieces to generate?
-        var p:Int;
+        var piece_gen:Int;
 
         // Which pieces are from main tileset?
-        var pm:Int;
+        var piece_main:Int;
 
         // Temp pixels array to store pixels of tiles
         var _pixels:Uint8Array = new Uint8Array(Main.tile_size*Main.tile_size*4);
@@ -80,12 +86,12 @@ class Generator {
         var tile:Tile;
 
         inline function main_pieces(_flag:Int = 0){
-            if(_flag == 0) _flag = pm;
+            if(_flag == 0) _flag = piece_main;
             _pixels = tilesets[main].get(_flag);
             tile.add_ontop(_pixels);
         }
         inline function other_pieces(i:Int, ?_flag:Int = 0){
-            if(_flag == 0) _flag = p;
+            if(_flag == 0) _flag = piece_gen;
             _pixels = tilesets[i].get(_flag);
             tile.add_ontop(_pixels);
         }
