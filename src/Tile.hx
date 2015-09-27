@@ -74,4 +74,40 @@ class Tile {
     }
 
 
+    public function add_ontop( _pixels:Uint8Array ){
+
+        if(texture != null) return;
+
+        var color:C = {r:0, g:0, b:0, a:0};
+        var n = 4;
+
+        while( n < _pixels.length ){
+
+            // get pixel
+            color.r = _pixels[n];
+            color.g = _pixels[n+1];
+            color.b = _pixels[n+2];
+            color.a = _pixels[n+3];
+
+            // do nothing if transparent
+            if(color.a > 0){
+                // trace('gonna draw: ${color}');
+                pixels[n] = color.r;
+                pixels[n+1] = color.g;
+                pixels[n+2] = color.b;
+                pixels[n+3] = color.a;
+            }
+
+            n += 4;
+
+        }
+    }
+
+}
+
+typedef C = {
+    var a:Int;
+    var r:Int;
+    var g:Int;
+    var b:Int;
 }
