@@ -134,8 +134,8 @@ class Generator {
          * |---+---|
          */
         
-        p = Tile.T1;
-        pm = Tile.T2 | Tile.T3 | Tile.T4;
+        piece_gen = T1;
+        piece_main = T2 | T3 | T4;
         walk_tilesets();
 
         /**
@@ -146,8 +146,8 @@ class Generator {
          * |---+---|
          */
         
-        p = Tile.T2;
-        pm = Tile.T1 | Tile.T3 | Tile.T4;
+        piece_gen = T2;
+        piece_main = T1 | T3 | T4;
         walk_tilesets();
 
         /**
@@ -158,8 +158,8 @@ class Generator {
          * |---+---|
          */
         
-        p = Tile.T3;
-        pm = Tile.T1 | Tile.T2 | Tile.T4;
+        piece_gen = T3;
+        piece_main = T1 | T2 | T4;
         walk_tilesets();
 
         /**
@@ -170,10 +170,80 @@ class Generator {
          * |---+---|
          */
         
-        p = Tile.T4;
-        pm = Tile.T1 | Tile.T2 | Tile.T3;
+        piece_gen = T4;
+        piece_main = T1 | T2 | T3;
         walk_tilesets();
 
+
+
+
+        // Twos (2 pieces of the same tile)
+
+        /**
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         */
+        piece_gen = T2 | T4;
+        piece_main = T1 | T3;
+        walk_tilesets();
+        
+        /**
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         */
+        piece_gen = T1 | T3;
+        piece_main = T2 | T4;
+        walk_tilesets();
+        
+        /**
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         */
+        piece_gen = T2 | T3;
+        piece_main = T1 | T4;
+        walk_tilesets();
+        
+        /**
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         */
+        piece_gen = T1 | T4;
+        piece_main = T2 | T3;
+        walk_tilesets();
+        
+        /**
+         * |---+---|
+         * | X | X |
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         */
+        piece_gen = T3 | T4;
+        piece_main = T1 | T2;
+        walk_tilesets();
+        
+        /**
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         * | X | X |
+         * |---+---|
+         */
+        piece_gen = T1 | T2;
+        piece_main = T3 | T4;
+        walk_tilesets();
     }
 
 
