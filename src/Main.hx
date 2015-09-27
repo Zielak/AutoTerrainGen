@@ -479,9 +479,11 @@ class Main extends luxe.Game {
 
     function load_tileset(url:String) {
 
-        // trace('load_tileset(${url})');
+        if(Luxe.resources.texture(url) != null){
+            disp.text += '\nTileset was already loaded! (${url})';
+            return;
+        }
 
-        // var load:snow.api.Promise = Luxe.snow.io.module.data_load(url);
         var load:snow.api.Promise = Luxe.resources.load_texture(url);
 
         load.then(function(e:Texture){
@@ -496,7 +498,7 @@ class Main extends luxe.Game {
         },
         function(_){
             Luxe.resources.remove( Luxe.resources.texture(url) );
-            trace('FAILED to load');
+            disp.text += '\nFAILED to load';
         });
 
 
