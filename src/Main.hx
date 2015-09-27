@@ -64,16 +64,16 @@ class Main extends luxe.Game {
         Luxe.renderer.clear_color.rgb(0x121219);
 
         
+        generator = new Generator();
 
         init_canvas();
         init_events();
         
-        generator = new Generator();
 
-        // load_tileset('/assets/dirt16.gif');
-        // load_tileset('/assets/grass16.gif');
-        // load_tileset('/assets/template16.gif');
-        // load_tileset('/assets/tiles16.gif');
+        load_tileset('/assets/dirt16.gif');
+        load_tileset('/assets/grass16.gif');
+        load_tileset('/assets/template16.gif');
+        load_tileset('/assets/tiles16.gif');
 
     } //ready
 
