@@ -101,7 +101,6 @@ class Main extends luxe.Game {
             align_vertical: luxe.TextAlign.bottom,
             point_size: 15,
             text: 'usage text goes here'
-            x: 0, y:0, w: 960, h: 640
         });
 
         create_window_output();
