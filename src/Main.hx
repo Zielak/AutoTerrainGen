@@ -50,6 +50,10 @@ class Main extends luxe.Game {
     var tiles_list:mint.List;
     var tileset_title:mint.Label;
 
+    var window_output:mint.Window;
+    var output_scroll:mint.Scroll;
+    var output_image:mint.Image;
+
 
     override function config(config:luxe.AppConfig) {
 
@@ -99,6 +103,7 @@ class Main extends luxe.Game {
             text: 'usage text goes here'
         });
 
+        create_window_output();
         create_window1();
         create_window_tileset();
 
@@ -109,6 +114,18 @@ class Main extends luxe.Game {
         Luxe.events.listen('config_text.update', function(e:String){
             config_text.text = e;
             trace(e);
+        });
+
+        Luxe.events.listen('generator.done', function(_){
+
+            if(output_image != null) output_image.destroy();
+
+            output_image = new mint.Image({
+                parent: output_scroll,
+                name: 'image_output',
+                x:0, y:0, w:generator.w * 4, h:generator.h * 4,
+                path: 'output'
+            });
         });
 
     }
@@ -125,7 +142,7 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:450, y:10, w:150, h: 400,
+            x:450, y:400, w:150, h: 400,
             w_min: 150, h_min:256,
             collapsible:true,
             closable: false,
@@ -164,7 +181,7 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:10, y:10, w:400, h: 400,
+            x:10, y:400, w:400, h: 400,
             w_min: 256, h_min:256,
             collapsible:true,
             closable: false,
@@ -241,6 +258,34 @@ class Main extends luxe.Game {
 
 
     } //create_window1
+
+    function create_window_output(){
+
+        window_output = new mint.Window({
+            parent: canvas,
+            name: 'window_output',
+            title: 'Output preview',
+            options: {
+                color:new Color().rgb(0x121212),
+                color_titlebar:new Color().rgb(0x191919),
+                label: { color:new Color().rgb(0x06b4fb) },
+                close_button: { color:new Color().rgb(0x06b4fb) },
+            },
+            x:10, y:10, w:Luxe.screen.width-40, h: 380,
+            w_min: 100, h_min:64,
+            collapsible:true,
+            closable: false,
+        });
+
+        output_scroll = new mint.Scroll({
+            parent: window_output,
+            name: 'scroll1',
+            options: { color_handles:new Color().rgb(0xffffff) },
+            x:4, y:30, w: 200, h: 100,
+        });
+        layout.margin(output_scroll, bottom, fixed, 8);
+        layout.margin(output_scroll, right, fixed, 4);
+    }
 
     function create_tileset_li(tileset:TileSet) {
 

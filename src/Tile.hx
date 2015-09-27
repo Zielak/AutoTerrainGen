@@ -18,6 +18,7 @@ class Tile {
     public static inline var T2:Hex = 0x0010;
     public static inline var T3:Hex = 0x0100;
     public static inline var T4:Hex = 0x1000;
+    public static inline var WHOLE:Hex = 0x1111;
 
     public var texture:Texture;
 
