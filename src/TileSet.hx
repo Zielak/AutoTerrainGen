@@ -79,7 +79,7 @@ class TileSet {
 
         for( t in tiles ){
             if(t.flag == flag){
-                t.texture.fetch(p);
+                p = t.texture.fetch(p);
                 break;
             }
         }
