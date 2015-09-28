@@ -212,6 +212,8 @@ class Main extends luxe.Game {
             tile_id = Tile.T1 | Tile.T2 | Tile.T3 | Tile.T4;
             Luxe.resources.destroy( id+'_'+tile_id, true);
 
+            generator.calculate_tiles();
+
         });
         
             
@@ -238,6 +240,7 @@ class Main extends luxe.Game {
 
         tileset_title = new mint.Label({
             parent: window_tileset,
+            name: 'tileset_title',
             text: 'Select tileset first',
             text_size: 14,
             align: right,
