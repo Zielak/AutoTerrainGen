@@ -25,14 +25,23 @@ class Generator {
     public var w:Int = 0;
     public var h:Int = 0;
 
+
+    // Which pieces to generate right now?
+    var piece_gen:Int;
+
+    // Which pieces are from main tileset right now?
+    var piece_main:Int;
+
+    // Temp tile
+    var tile:Tile;
+
+    // Temp pixels array to store pixels of tiles
+    var _pixels:Uint8Array;
+
+    // Current MAIN tileset
+    var _main:Int;
+
     public function new() {
-
-
-        // output = new Texture({
-        //     id: 'output',
-        //     filter_mag: phoenix.FilterType.nearest,
-        //     filter_min: phoenix.FilterType.nearest,
-        // });        
 
     }
 
@@ -69,116 +78,161 @@ class Generator {
 
     }
 
-    // Returns first empty piece (0) in piece_gen and occupies it.
-    // Next call should return the second empty space
-    function take_first_piece(i:Int):Int{
-        
-        if( i & 0x0001 == 0 ) return 0x0001;
-        if( i & 0x0010 == 0 ) return 0x0010;
-        if( i & 0x0100 == 0 ) return 0x0100;
-        if( i & 0x1000 == 0 ) return 0x1000;
+    // Returns nth empty piece (0) in piece_gen and returns its flag (one piece only).
+    function get_nth_piece_flag(flag:Int, i:Int):Int{
 
+        var _pieces:Array<Bool> = new Array<Bool>();
+
+        var _count:Int = i;
+
+        _pieces[0] = (flag & 0x0001 > 0);
+        _pieces[1] = (flag & 0x0010 > 0);
+        _pieces[2] = (flag & 0x0100 > 0);
+        _pieces[3] = (flag & 0x1000 > 0);
+
+        for(j in 0..._pieces.length){
+            
+            if(_pieces[j]){
+                _count--;
+                if(_count >= 0) continue;
+
+                return [0x0001, 0x0010, 0x0100, 0x1000][j];
+            }
+             
+        }
         return 0x0000;
+    }
+
+    // Adds pieces of given layer on tile
+    // if flag is not set, then it's current piece_gen
+    function get_pieces(layer:Int, ?_flag:Int = 0){
+
+        // Set default flag
+        if(_flag == 0) _flag = piece_gen;
+
+        // Void? nothing to do
+        if(layer < 0) return;
+
+        _pixels = tilesets[layer].get(_flag);
+        tile.add_ontop(_pixels);
+    }
+
+    function main_pieces(_flag:Int = 0){
+        if(_flag == 0) _flag = piece_main;
+        _pixels = tilesets[_main].get(_flag);
+        tile.add_ontop(_pixels);
+    }
+
+    // Puts all the pieces together in one tile
+    // used in "max 2 different tiles"
+    function add_pieces_2(i:Int){
+
+        if(i > _main){
+            main_pieces(Tile.WHOLE);
+            get_pieces(i);
+        }else if(i < _main){
+            get_pieces(i, Tile.WHOLE);
+            main_pieces();
+        }else{
+            // Adds Void when other == _main
+            main_pieces();
+        }
+    }
+
+
+    // Puts all the pieces together in one tile
+    // used in "max 3 different tiles"
+    function add_pieces_3(i:Int, j:Int){
+
+        trace('add_pieces_3( ${i}, ${j} ) | _main = ${_main}');
+
+        // Don't repeat yourself, you already did that with add_piece_2()
+        // 'other' pieces are the same
+        if(i == j){
+            trace(' - i == j, cancelling');
+            return;
+        }
+
+        // if i or j are equal to _main treat them as void
+        if( i == _main ){
+            i = -1;
+            trace(' - i set to Void');
+        }
+        if( j == _main ){
+            j = -1;
+            trace(' - j set to Void');
+        }
+
+        // var _layers:Array<Array<Int>> = [
+        //     [_main, i, j],
+        //     [_main, j, i],
+        //     [i, _main, j],
+        //     [j, _main, i],
+        //     [i, j, _main],
+        //     [j, i, _main],
+        // ];
+
+        // Painting order
+        var _layers:Array<Int> = [_main, i, j];
+
+        _layers.sort(function(a:Int,b:Int):Int {
+            if (a == b) return 0;
+            if (a > b) return 1;
+            else return -1;
+        });
+
+        var _order:Array<Int> = [_main, i, j];
+
+        // var _flags:Array<Array<Int>> = [
+        //     [piece_main, get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1)],
+        //     [piece_main, get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1)],
+        //     [get_nth_piece_flag(piece_gen, 0), piece_main, get_nth_piece_flag(piece_gen, 1)],
+        //     [get_nth_piece_flag(piece_gen, 0), piece_main, get_nth_piece_flag(piece_gen, 1)],
+        //     [get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1), piece_main],
+        //     [get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1), piece_main],
+        // ];
+
+        // Add combinations
+        // for(x in 0..._flags.length){
+
+        tile = new Tile();
+
+        var _count:Int = 0;
+
+        for(k in 0...3){
+            
+            if(_layers[k] == _main){
+                main_pieces(_layers[k]);
+            }else{
+                get_pieces(_layers[k], get_nth_piece_flag(piece_gen, _count));
+                _count++;
+            }
+
+        }
+            
+                
+
+        output_tiles.push( tile );
+
+        trace('DONE');
+
+        // }
+
     }
 
     function main( main:Int ) {
 
-        // Which pieces to generate?
-        var piece_gen:Int;
+        _main = main;
 
-        // Which pieces are from main tileset?
-        var piece_main:Int;
+        _pixels = new Uint8Array(Main.tile_size*Main.tile_size*4);
 
-        // Temp pixels array to store pixels of tiles
-        var _pixels:Uint8Array = new Uint8Array(Main.tile_size*Main.tile_size*4);
-
-        var tile:Tile;
-
-
-
-
-
-        inline function main_pieces(_flag:Int = 0){
-            if(_flag == 0) _flag = piece_main;
-            _pixels = tilesets[main].get(_flag);
-            tile.add_ontop(_pixels);
-        }
-
-        // Adds pieces of given layer on tile
-        // if flag is not set, then it's current piece_gen
-        inline function get_pieces(layer:Int, ?_flag:Int = 0){
-            if(_flag == 0) _flag = piece_gen;
-            _pixels = tilesets[layer].get(_flag);
-            tile.add_ontop(_pixels);
-        }
-
-        // Puts all the pieces together in one tile
-        // used in "max 2 different tiles"
-        inline function add_pieces_2(i:Int){
-
-            if(i > main){
-                main_pieces(Tile.WHOLE);
-                get_pieces(i);
-            }else if(i < main){
-                get_pieces(i, Tile.WHOLE);
-                main_pieces();
-            }else{
-                // Adds Void when other == main
-                main_pieces();
-            }
-        }
-
-        // Puts all the pieces together in one tile
-        // used in "max 3 different tiles"
-        inline function add_pieces_3(i:Int, j:Int){
-
-            var layers:Array<Array<Int>> = [
-                [main, i, j],
-                [main, j, i],
-                [i, main, j],
-                [j, main, i],
-                [i, j, main],
-                [j, i, main],
-            ];
-
-            var flags:Array<Array<Int>> = [
-                [piece_main, take_first_piece(piece_gen), take_first_piece(piece_gen)],
-                [piece_main, take_first_piece(piece_gen), take_first_piece(piece_gen)],
-                [take_first_piece(piece_gen), piece_main, take_first_piece(piece_gen)],
-                [take_first_piece(piece_gen), piece_main, take_first_piece(piece_gen)],
-                [take_first_piece(piece_gen), take_first_piece(piece_gen), piece_main],
-                [take_first_piece(piece_gen), take_first_piece(piece_gen), piece_main],
-            ];
-
-            var iflag:Int;
-            var jflag:Int;
-
-            for(x in 0...layers.length){
-                get_pieces(layers[x][0], flags[x][0]);
-                get_pieces(layers[x][1], flags[x][1]);
-                get_pieces(layers[x][2], flags[x][2]);
-            }
-            
-            // if(i > main){
-            //     main_pieces(Tile.WHOLE);
-            //     get_pieces(i);
-            // }else if(i < main){
-            //     get_pieces(i, Tile.WHOLE);
-            //     main_pieces();
-            // }else{
-            //     // Adds Void when (WHAT?)
-            //     main_pieces();
-            // }
-        }
 
         // 2 different tiles (main and other)
         inline function walk_tilesets_2(){
 
             for(i in 0...tilesets.length) {
 
-                tile = new Tile();
                 add_pieces_2(i);
-                output_tiles.push( tile );
             }
 
         }
@@ -191,12 +245,7 @@ class Generator {
 
                 for(j in 0...tilesets.length) {
 
-                    // Don't repeat the walk_tileset_2 situation
-                    if(i == j) continue;
-
-                    tile = new Tile();
                     add_pieces_3(i, j);
-                    output_tiles.push( tile );
 
                 }
             }
@@ -210,48 +259,46 @@ class Generator {
          * ==========================================================
          */
 
+         /* turning off for testing
+
         // Threes (3 pieces of the main tile)
 
-        /**
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // | X | X |
+        // |---+---|
         piece_gen = T1;
         piece_main = T2 | T3 | T4;
         walk_tilesets_2();
 
-        /**
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // | X | X |
+        // |---+---|
         piece_gen = T2;
         piece_main = T1 | T3 | T4;
         walk_tilesets_2();
 
-        /**
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // | X | X |
+        // |---+---|
+        // | X |   |
+        // |---+---|
         piece_gen = T3;
         piece_main = T1 | T2 | T4;
         walk_tilesets_2();
 
-        /**
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // | X | X |
+        // |---+---|
+        // |   | X |
+        // |---+---|
         piece_gen = T4;
         piece_main = T1 | T2 | T3;
         walk_tilesets_2();
@@ -261,68 +308,62 @@ class Generator {
 
         // Twos (2 pieces of the main tile)
 
-        /**
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // |   | X |
+        // |---+---|
         piece_gen = T2 | T4;
         piece_main = T1 | T3;
         walk_tilesets_2();
         
-        /**
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // | X |   |
+        // |---+---|
         piece_gen = T1 | T3;
         piece_main = T2 | T4;
         walk_tilesets_2();
         
-        /**
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // | X |   |
+        // |---+---|
         piece_gen = T2 | T3;
         piece_main = T1 | T4;
         walk_tilesets_2();
         
-        /**
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // |   | X |
+        // |---+---|
         piece_gen = T1 | T4;
         piece_main = T2 | T3;
         walk_tilesets_2();
         
-        /**
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // | X | X |
+        // |---+---|
+        // |   |   |
+        // |---+---|
         piece_gen = T3 | T4;
         piece_main = T1 | T2;
         walk_tilesets_2();
         
-        /**
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // | X | X |
+        // |---+---|
         piece_gen = T1 | T2;
         piece_main = T3 | T4;
         walk_tilesets_2();
@@ -330,50 +371,47 @@ class Generator {
 
         // Ones (one piece of the main tile)
 
-        /**
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // |   |   |
+        // |---+---|
         piece_gen = T2 | T3 | T4;
         piece_main = T1;
         walk_tilesets_2();
 
-        /**
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // |   |   |
+        // |---+---|
         piece_gen = T1 | T3 | T4;
         piece_main = T2;
         walk_tilesets_2();
 
-        /**
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // |   | X |
+        // |---+---|
         piece_gen = T1 | T2 | T4;
         piece_main = T3;
         walk_tilesets_2();
 
-        /**
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // | X |   |
+        // |---+---|
         piece_gen = T1 | T2 | T3;
         piece_main = T4;
         walk_tilesets_2();
 
+        */
 
 
         /**
@@ -382,122 +420,113 @@ class Generator {
          * ==========================================================
          */
         
+
+        
         // Ones (one piece of the main tile)
 
-        /**
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         */
-        piece_gen = T2 | T3 | T4;
-        piece_main = T1;
-        walk_tilesets_3();
+        
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // piece_gen = T2 | T3 | T4;
+        // piece_main = T1;
+        // walk_tilesets_3();
 
-        /**
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         */
-        piece_gen = T1 | T3 | T4;
-        piece_main = T2;
-        walk_tilesets_3();
+        
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // piece_gen = T1 | T3 | T4;
+        // piece_main = T2;
+        // walk_tilesets_3();
 
-        /**
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         */
-        piece_gen = T1 | T2 | T4;
-        piece_main = T3;
-        walk_tilesets_3();
+        
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // piece_gen = T1 | T2 | T4;
+        // piece_main = T3;
+        // walk_tilesets_3();
 
-        /**
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         */
-        piece_gen = T1 | T2 | T3;
-        piece_main = T4;
-        walk_tilesets_3();
+        
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // piece_gen = T1 | T2 | T3;
+        // piece_main = T4;
+        // walk_tilesets_3();
 
 
         // Twos (2 pieces of the main tile)
 
-        /**
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         */
-        piece_gen = T2 | T4;
-        piece_main = T1 | T3;
-        walk_tilesets_3();
         
-        /**
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         */
-        piece_gen = T1 | T3;
-        piece_main = T2 | T4;
-        walk_tilesets_3();
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // piece_gen = T2 | T4;
+        // piece_main = T1 | T3;
+        // walk_tilesets_3();
         
-        /**
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         * | X |   |
-         * |---+---|
-         */
+        
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // piece_gen = T1 | T3;
+        // piece_main = T2 | T4;
+        // walk_tilesets_3();
+        
+        
+        // |---+---|
+        // | X |   |
+        // |---+---|
+        // | X |   |
+        // |---+---|
         piece_gen = T2 | T3;
         piece_main = T1 | T4;
         walk_tilesets_3();
         
-        /**
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         * |   | X |
-         * |---+---|
-         */
-        piece_gen = T1 | T4;
-        piece_main = T2 | T3;
-        walk_tilesets_3();
         
-        /**
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         */
-        piece_gen = T3 | T4;
-        piece_main = T1 | T2;
-        walk_tilesets_3();
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // |   | X |
+        // |---+---|
+        // piece_gen = T1 | T4;
+        // piece_main = T2 | T3;
+        // walk_tilesets_3();
         
-        /**
-         * |---+---|
-         * |   |   |
-         * |---+---|
-         * | X | X |
-         * |---+---|
-         */
-        piece_gen = T1 | T2;
-        piece_main = T3 | T4;
-        walk_tilesets_3();
-
-
+        
+        // |---+---|
+        // | X | X |
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // piece_gen = T3 | T4;
+        // piece_main = T1 | T2;
+        // walk_tilesets_3();
+        
+        
+        // |---+---|
+        // |   |   |
+        // |---+---|
+        // | X | X |
+        // |---+---|
+        // piece_gen = T1 | T2;
+        // piece_main = T3 | T4;
+        // walk_tilesets_3();
+        
     }
 
 
