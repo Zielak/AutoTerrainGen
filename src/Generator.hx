@@ -69,6 +69,18 @@ class Generator {
 
     }
 
+    // Returns first empty piece (0) in piece_gen and occupies it.
+    // Next call should return the second empty space
+    function take_first_piece(i:Int):Int{
+        
+        if( i & 0x0001 == 0 ) return 0x0001;
+        if( i & 0x0010 == 0 ) return 0x0010;
+        if( i & 0x0100 == 0 ) return 0x0100;
+        if( i & 0x1000 == 0 ) return 0x1000;
+
+        return 0x0000;
+    }
+
     function main( main:Int ) {
 
         // Which pieces to generate?
@@ -92,9 +104,11 @@ class Generator {
             tile.add_ontop(_pixels);
         }
 
-        inline function other_pieces(i:Int, ?_flag:Int = 0){
+        // Adds pieces of given layer on tile
+        // if flag is not set, then it's current piece_gen
+        inline function get_pieces(layer:Int, ?_flag:Int = 0){
             if(_flag == 0) _flag = piece_gen;
-            _pixels = tilesets[i].get(_flag);
+            _pixels = tilesets[layer].get(_flag);
             tile.add_ontop(_pixels);
         }
 
@@ -104,20 +118,62 @@ class Generator {
 
             if(i > main){
                 main_pieces(Tile.WHOLE);
-                other_pieces(i);
+                get_pieces(i);
             }else if(i < main){
-                other_pieces(i, Tile.WHOLE);
+                get_pieces(i, Tile.WHOLE);
                 main_pieces();
             }else{
-                // Void
+                // Adds Void when other == main
                 main_pieces();
             }
         }
 
-        // 
-        inline function walk_tilesets(){
+        // Puts all the pieces together in one tile
+        // used in "max 3 different tiles"
+        inline function add_pieces_3(i:Int, j:Int){
 
-            // 2 different tiles
+            var layers:Array<Array<Int>> = [
+                [main, i, j],
+                [main, j, i],
+                [i, main, j],
+                [j, main, i],
+                [i, j, main],
+                [j, i, main],
+            ];
+
+            var flags:Array<Array<Int>> = [
+                [piece_main, take_first_piece(piece_gen), take_first_piece(piece_gen)],
+                [piece_main, take_first_piece(piece_gen), take_first_piece(piece_gen)],
+                [take_first_piece(piece_gen), piece_main, take_first_piece(piece_gen)],
+                [take_first_piece(piece_gen), piece_main, take_first_piece(piece_gen)],
+                [take_first_piece(piece_gen), take_first_piece(piece_gen), piece_main],
+                [take_first_piece(piece_gen), take_first_piece(piece_gen), piece_main],
+            ];
+
+            var iflag:Int;
+            var jflag:Int;
+
+            for(x in 0...layers.length){
+                get_pieces(layers[x][0], flags[x][0]);
+                get_pieces(layers[x][1], flags[x][1]);
+                get_pieces(layers[x][2], flags[x][2]);
+            }
+            
+            // if(i > main){
+            //     main_pieces(Tile.WHOLE);
+            //     get_pieces(i);
+            // }else if(i < main){
+            //     get_pieces(i, Tile.WHOLE);
+            //     main_pieces();
+            // }else{
+            //     // Adds Void when (WHAT?)
+            //     main_pieces();
+            // }
+        }
+
+        // 2 different tiles (main and other)
+        inline function walk_tilesets_2(){
+
             for(i in 0...tilesets.length) {
 
                 tile = new Tile();
@@ -125,15 +181,34 @@ class Generator {
                 output_tiles.push( tile );
             }
 
-            // 3 different tiles in one
-            // Ones and Twos. Threes won't fit 4th different tile.
-            
-            // TODO
+        }
+
+        // 3 different tiles in one (main and 2 other)
+        // Ones and Twos. Threes won't fit 4th different tile.
+        inline function walk_tilesets_3(){
+
+            for(i in 0...tilesets.length) {
+
+                for(j in 0...tilesets.length) {
+
+                    // Don't repeat the walk_tileset_2 situation
+                    if(i == j) continue;
+
+                    tile = new Tile();
+                    add_pieces_3(i, j);
+                    output_tiles.push( tile );
+
+                }
+            }
 
         }
 
 
-
+        /**
+         * ==========================================================
+         *      2 different pieces     ##############################
+         * ==========================================================
+         */
 
         // Threes (3 pieces of the main tile)
 
@@ -144,10 +219,9 @@ class Generator {
          * | X | X |
          * |---+---|
          */
-        
         piece_gen = T1;
         piece_main = T2 | T3 | T4;
-        walk_tilesets();
+        walk_tilesets_2();
 
         /**
          * |---+---|
@@ -156,10 +230,9 @@ class Generator {
          * | X | X |
          * |---+---|
          */
-        
         piece_gen = T2;
         piece_main = T1 | T3 | T4;
-        walk_tilesets();
+        walk_tilesets_2();
 
         /**
          * |---+---|
@@ -168,10 +241,9 @@ class Generator {
          * | X |   |
          * |---+---|
          */
-        
         piece_gen = T3;
         piece_main = T1 | T2 | T4;
-        walk_tilesets();
+        walk_tilesets_2();
 
         /**
          * |---+---|
@@ -180,10 +252,9 @@ class Generator {
          * |   | X |
          * |---+---|
          */
-        
         piece_gen = T4;
         piece_main = T1 | T2 | T3;
-        walk_tilesets();
+        walk_tilesets_2();
 
 
 
@@ -199,7 +270,7 @@ class Generator {
          */
         piece_gen = T2 | T4;
         piece_main = T1 | T3;
-        walk_tilesets();
+        walk_tilesets_2();
         
         /**
          * |---+---|
@@ -210,7 +281,7 @@ class Generator {
          */
         piece_gen = T1 | T3;
         piece_main = T2 | T4;
-        walk_tilesets();
+        walk_tilesets_2();
         
         /**
          * |---+---|
@@ -221,7 +292,7 @@ class Generator {
          */
         piece_gen = T2 | T3;
         piece_main = T1 | T4;
-        walk_tilesets();
+        walk_tilesets_2();
         
         /**
          * |---+---|
@@ -232,7 +303,7 @@ class Generator {
          */
         piece_gen = T1 | T4;
         piece_main = T2 | T3;
-        walk_tilesets();
+        walk_tilesets_2();
         
         /**
          * |---+---|
@@ -243,7 +314,7 @@ class Generator {
          */
         piece_gen = T3 | T4;
         piece_main = T1 | T2;
-        walk_tilesets();
+        walk_tilesets_2();
         
         /**
          * |---+---|
@@ -254,7 +325,7 @@ class Generator {
          */
         piece_gen = T1 | T2;
         piece_main = T3 | T4;
-        walk_tilesets();
+        walk_tilesets_2();
 
 
         // Ones (one piece of the main tile)
@@ -268,7 +339,7 @@ class Generator {
          */
         piece_gen = T2 | T3 | T4;
         piece_main = T1;
-        walk_tilesets();
+        walk_tilesets_2();
 
         /**
          * |---+---|
@@ -279,7 +350,7 @@ class Generator {
          */
         piece_gen = T1 | T3 | T4;
         piece_main = T2;
-        walk_tilesets();
+        walk_tilesets_2();
 
         /**
          * |---+---|
@@ -290,7 +361,7 @@ class Generator {
          */
         piece_gen = T1 | T2 | T4;
         piece_main = T3;
-        walk_tilesets();
+        walk_tilesets_2();
 
         /**
          * |---+---|
@@ -301,7 +372,132 @@ class Generator {
          */
         piece_gen = T1 | T2 | T3;
         piece_main = T4;
-        walk_tilesets();
+        walk_tilesets_2();
+
+
+
+        /**
+         * ==========================================================
+         *      3 different pieces     ##############################
+         * ==========================================================
+         */
+        
+        // Ones (one piece of the main tile)
+
+        /**
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         */
+        piece_gen = T2 | T3 | T4;
+        piece_main = T1;
+        walk_tilesets_3();
+
+        /**
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         */
+        piece_gen = T1 | T3 | T4;
+        piece_main = T2;
+        walk_tilesets_3();
+
+        /**
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         */
+        piece_gen = T1 | T2 | T4;
+        piece_main = T3;
+        walk_tilesets_3();
+
+        /**
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         */
+        piece_gen = T1 | T2 | T3;
+        piece_main = T4;
+        walk_tilesets_3();
+
+
+        // Twos (2 pieces of the main tile)
+
+        /**
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         */
+        piece_gen = T2 | T4;
+        piece_main = T1 | T3;
+        walk_tilesets_3();
+        
+        /**
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         */
+        piece_gen = T1 | T3;
+        piece_main = T2 | T4;
+        walk_tilesets_3();
+        
+        /**
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         * | X |   |
+         * |---+---|
+         */
+        piece_gen = T2 | T3;
+        piece_main = T1 | T4;
+        walk_tilesets_3();
+        
+        /**
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         * |   | X |
+         * |---+---|
+         */
+        piece_gen = T1 | T4;
+        piece_main = T2 | T3;
+        walk_tilesets_3();
+        
+        /**
+         * |---+---|
+         * | X | X |
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         */
+        piece_gen = T3 | T4;
+        piece_main = T1 | T2;
+        walk_tilesets_3();
+        
+        /**
+         * |---+---|
+         * |   |   |
+         * |---+---|
+         * | X | X |
+         * |---+---|
+         */
+        piece_gen = T1 | T2;
+        piece_main = T3 | T4;
+        walk_tilesets_3();
+
+
     }
 
 
