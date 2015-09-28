@@ -75,9 +75,9 @@ class Main extends luxe.Game {
         
 
         load_tileset('/assets/template16.gif');
-        load_tileset('/assets/tiles16.gif');
         load_tileset('/assets/dirt16.gif');
         load_tileset('/assets/grass16.gif');
+        load_tileset('/assets/tiles16.gif');
 
     } //ready
 
@@ -167,6 +167,51 @@ class Main extends luxe.Game {
             refresh_tilesets_list();
 
             generator.update_tilesets(tilesets);
+        });
+
+        Luxe.events.listen('tilesets_list.remove', function(o:ControlEvent){
+            
+            var idx = tilesets_list.items.indexOf(o.ctrl);
+            var id = tilesets[idx].id;
+            var tile_id:Hex = 0;
+
+            tilesets.splice(idx, 1);
+
+            refresh_tilesets_list();
+
+            Luxe.resources.destroy( id, true );
+
+            tile_id = Tile.T1;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T2;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T3;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T1 | Tile.T3;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T2 | Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T1 | Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T2 | Tile.T3;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T1 | Tile.T2;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T3 | Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T2 | Tile.T3 | Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T1 | Tile.T3 | Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T1 | Tile.T2 | Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T1 | Tile.T2 | Tile.T3;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+            tile_id = Tile.T1 | Tile.T2 | Tile.T3 | Tile.T4;
+            Luxe.resources.destroy( id+'_'+tile_id, true);
+
         });
         
             
@@ -377,6 +422,19 @@ class Main extends luxe.Game {
             Luxe.events.fire('tilesets_list.godown', {event: e, ctrl: ctrl.parent});
         });
 
+
+
+
+        var _remove = new mint.Button({
+            parent: _panel, name: 'button_${tileset.id}_orderdown',
+            text: 'remove',
+            x:236-64, y:36, w:64, h:20, text_size: 16,
+            align: TextAlign.center,
+        });
+        _remove.onmouseup.listen(function(e,ctrl){
+            Luxe.events.fire('tilesets_list.remove', {event: e, ctrl: ctrl.parent});
+        });
+        layout.anchor(_remove, right, right);
 
 
 
