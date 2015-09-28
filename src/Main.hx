@@ -128,6 +128,15 @@ class Main extends luxe.Game {
             });
         });
 
+        inline function refresh_tilesets_list(){
+
+            tilesets_list.clear();
+            for(ts in tilesets){
+                tilesets_list.add_item( create_tileset_li(ts) );
+            }
+
+        }
+
         Luxe.events.listen('tilesets_list.goup', function(o:ControlEvent){
 
             var idx = tilesets_list.items.indexOf(o.ctrl);
@@ -139,10 +148,7 @@ class Main extends luxe.Game {
             tilesets.splice(nidx, 1);
             tilesets.insert(nidx+1, swapper);
             
-            tilesets_list.clear();
-            for(ts in tilesets){
-                tilesets_list.add_item( create_tileset_li(ts) );
-            }
+            refresh_tilesets_list();
 
             generator.update_tilesets(tilesets);
         } );
@@ -158,10 +164,7 @@ class Main extends luxe.Game {
             tilesets.splice(nidx, 1);
             tilesets.insert(nidx-1, swapper);
             
-            tilesets_list.clear();
-            for(ts in tilesets){
-                tilesets_list.add_item( create_tileset_li(ts) );
-            }
+            refresh_tilesets_list();
 
             generator.update_tilesets(tilesets);
         });
@@ -184,7 +187,7 @@ class Main extends luxe.Game {
             },
             x:450, y:360, w:150, h: 300,
             w_min: 150, h_min:256,
-            collapsible:true,
+            collapsible:false,
             closable: false,
         });
 
@@ -221,9 +224,9 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:10, y:360, w:400, h: 400,
+            x:10, y:360, w:400, h: 430,
             w_min: 256, h_min:256,
-            collapsible:true,
+            collapsible:false,
             closable: false,
         });
 
@@ -330,20 +333,20 @@ class Main extends luxe.Game {
         var _panel = new mint.Panel({
             parent: tilesets_list,
             name: 'panel_${tileset.id}',
-            x:2, y:4, w:236, h:74,
+            x:2, y:4, w:236, h:64,
         });
 
         layout.margin(_panel, right, fixed, 8);
 
         new mint.Image({
             parent: _panel, name: 'icon_${tileset.id}',
-            x:4, y:4, w:64, h:64,
+            x:0, y:0, w:64, h:64,
             path: tileset.id
         });
 
         var _title = new mint.Label({
             parent: _panel, name: 'label_${tileset.id}',
-            mouse_input:true, x:96, y:8, w:148, h:18, text_size: 16,
+            mouse_input:true, x:80, y:8, w:148, h:18, text_size: 16,
             align: TextAlign.left, align_vertical: TextAlign.top,
             text: tileset.id,
         });
@@ -351,11 +354,12 @@ class Main extends luxe.Game {
             var idx = tilesets_list.items.indexOf(ctrl.parent);
             tileset_preview_show(idx);
         });
+        layout.margin(_title, right, fixed, 8);
 
         var _order_up = new mint.Button({
             parent: _panel, name: 'button_${tileset.id}_orderup',
             text: 'up ^',
-            x:96, y:36, w:40, h:18, text_size: 16,
+            x:80, y:36, w:40, h:20, text_size: 16,
             align: TextAlign.center,
         });
         _order_up.onmouseup.listen(function(e,ctrl){
@@ -366,7 +370,7 @@ class Main extends luxe.Game {
         var _order_down = new mint.Button({
             parent: _panel, name: 'button_${tileset.id}_orderdown',
             text: 'down v',
-            x:96+40, y:36, w:64, h:18, text_size: 16,
+            x:80+40, y:36, w:64, h:20, text_size: 16,
             align: TextAlign.center,
         });
         _order_down.onmouseup.listen(function(e,ctrl){
@@ -374,7 +378,7 @@ class Main extends luxe.Game {
         });
 
 
-        layout.margin(_title, right, fixed, 8);
+
 
         return _panel;
 
