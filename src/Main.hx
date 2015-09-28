@@ -75,7 +75,7 @@ class Main extends luxe.Game {
         
 
         load_tileset('/assets/template16.gif');
-        load_tileset('/assets/dirt16.gif');
+        // load_tileset('/assets/dirt16.gif');
         load_tileset('/assets/grass16.gif');
         load_tileset('/assets/tiles16.gif');
 
