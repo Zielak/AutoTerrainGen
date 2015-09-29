@@ -3,7 +3,7 @@
   luxe:{
     window: {
       width:640,
-      height:800,
+      height:900,
       title:'Auto Terrain Generator for Tiled',
       fullscreen:false,
       resizable:true,
@@ -25,6 +25,7 @@
       dependencies : {
         luxe : '*',
         mint: '*',
+        format: '*',
       }
     },
 
