@@ -25,6 +25,9 @@ class Tile {
     public var pixels:Uint8Array;
     public var flag:Hex;
 
+    // What tileset is placed in which piece?
+    public var pieces:Array<Int>;
+
     var foreign_id:String;
     public var id:String = '';
 
@@ -44,7 +47,11 @@ class Tile {
             pixels = new Uint8Array(Main.tile_size*Main.tile_size*4);
         }
 
-
+        pieces = new Array<Int>();
+        pieces[0] = -1;
+        pieces[1] = -1;
+        pieces[2] = -1;
+        pieces[3] = -1;
 
     }
 
@@ -75,7 +82,7 @@ class Tile {
     }
 
 
-    public function add_ontop( _pixels:Uint8Array ){
+    public function add_ontop( _pixels:Uint8Array, _layer:Int, _flag:Int ){
 
         if(texture != null) return;
 
@@ -102,6 +109,25 @@ class Tile {
             n += 4;
 
         }
+
+        // Now keep info about this action
+        var _flags = [0x0001,0x0010,0x0100,0x1000];
+        for(i in 0..._flags.length){
+            if(_flags[i] & _flag > 0) pieces[i] = _layer;
+        }
+    }
+
+    /**
+     * Gives string for comparison of the same tiles
+     * @return 
+     */
+    public function toString():String{
+        var s:String = '';
+        for(i in pieces){
+            if(i == -1) s += 'V';
+            else s += i;
+        }
+        return s;
     }
 
 }

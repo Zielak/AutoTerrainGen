@@ -13,14 +13,12 @@ class Generator {
     public static inline var WHOLE:Hex = 0x1111;
 
     var tile_count:Int;
-    var out_width:Int;
-    var out_height:Int;
 
     var tilesets:Array<TileSet>;
 
     var output_tiles:Array<Tile>;
-    var output_pixels:Uint8Array;
     public var output:Texture;
+    public var output_pixels:Uint8Array;
 
     public var w:Int = 0;
     public var h:Int = 0;
@@ -60,7 +58,7 @@ class Generator {
         // Thats actually the same as input...
         if(tilesets.length == 1){
            // stage_1();
-           trace('no work needed to do');
+           Luxe.events.fire('log.add', 'No work needed to do. Add at least one more tileset.');
         }
         // Max 2 types +void on one tile (T+2)
         if(tilesets.length >= 2){
@@ -114,18 +112,20 @@ class Generator {
         if(layer < 0) return;
 
         _pixels = tilesets[layer].get(_flag);
-        tile.add_ontop(_pixels);
+        tile.add_ontop(_pixels, layer, _flag);
     }
 
     function main_pieces(_flag:Int = 0){
         if(_flag == 0) _flag = piece_main;
         _pixels = tilesets[_main].get(_flag);
-        tile.add_ontop(_pixels);
+        tile.add_ontop(_pixels, _main, _flag);
     }
 
     // Puts all the pieces together in one tile
     // used in "max 2 different tiles"
     function add_pieces_2(i:Int){
+
+        tile = new Tile();
 
         if(i > _main){
             main_pieces(Tile.WHOLE);
@@ -137,86 +137,112 @@ class Generator {
             // Adds Void when other == _main
             main_pieces();
         }
+
+        try_to_add( tile );
+        
     }
 
 
     // Puts all the pieces together in one tile
     // used in "max 3 different tiles"
-    function add_pieces_3(i:Int, j:Int){
+    function add_pieces_3(i:Int, j:Int, ?k:Int){
 
-        trace('add_pieces_3( ${i}, ${j} ) | _main = ${_main}');
+        // trace('add_pieces_3( ${i}, ${j}, ${k} ) | _main = ${_main}');
 
-        // Don't repeat yourself, you already did that with add_piece_2()
-        // 'other' pieces are the same
-        if(i == j){
-            trace(' - i == j, cancelling');
-            return;
-        }
+        var _ordered:Array<LayerFlag> = new Array<LayerFlag>();
 
-        // if i or j are equal to _main treat them as void
-        if( i == _main ){
-            i = -1;
-            trace(' - i set to Void');
-        }
-        if( j == _main ){
-            j = -1;
-            trace(' - j set to Void');
-        }
+        _ordered[0] = {layer: _main, flag: piece_main};
+        _ordered[1] = {layer: i, flag: get_nth_piece_flag(piece_gen, 0)};
+        _ordered[2] = {layer: j, flag: get_nth_piece_flag(piece_gen, 1)};
+        if( k != null ) _ordered[3] = {layer: k, flag: get_nth_piece_flag(piece_gen, 2)};
 
-        // var _layers:Array<Array<Int>> = [
-        //     [_main, i, j],
-        //     [_main, j, i],
-        //     [i, _main, j],
-        //     [j, _main, i],
-        //     [i, j, _main],
-        //     [j, i, _main],
-        // ];
-
-        // Painting order
-        var _layers:Array<Int> = [_main, i, j];
-
-        _layers.sort(function(a:Int,b:Int):Int {
-            if (a == b) return 0;
-            if (a > b) return 1;
+        _ordered.sort(function(a:LayerFlag,b:LayerFlag):Int {
+            if (a.layer == b.layer) return 0;
+            if (a.layer > b.layer) return 1;
             else return -1;
         });
 
-        var _order:Array<Int> = [_main, i, j];
+        // Lower layers should also have pieces
+        // of the higher layers
+        if( k == null ){
+            _ordered[0].flag = _ordered[0].flag | _ordered[1].flag | _ordered[2].flag;
+            _ordered[1].flag = _ordered[1].flag | _ordered[2].flag;
+        }else{
+            _ordered[0].flag = _ordered[0].flag | _ordered[1].flag | _ordered[2].flag | _ordered[3].flag;
+            _ordered[1].flag = _ordered[1].flag | _ordered[2].flag | _ordered[3].flag;
+            _ordered[2].flag = _ordered[2].flag | _ordered[3].flag;
+        }
+        
 
-        // var _flags:Array<Array<Int>> = [
-        //     [piece_main, get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1)],
-        //     [piece_main, get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1)],
-        //     [get_nth_piece_flag(piece_gen, 0), piece_main, get_nth_piece_flag(piece_gen, 1)],
-        //     [get_nth_piece_flag(piece_gen, 0), piece_main, get_nth_piece_flag(piece_gen, 1)],
-        //     [get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1), piece_main],
-        //     [get_nth_piece_flag(piece_gen, 0), get_nth_piece_flag(piece_gen, 1), piece_main],
-        // ];
 
         // Add combinations
-        // for(x in 0..._flags.length){
-
         tile = new Tile();
 
-        var _count:Int = 0;
-
-        for(k in 0...3){
+        for(n in 0..._ordered.length){
             
-            if(_layers[k] == _main){
-                main_pieces(_layers[k]);
-            }else{
-                get_pieces(_layers[k], get_nth_piece_flag(piece_gen, _count));
-                _count++;
-            }
+            get_pieces(_ordered[n].layer, _ordered[n].flag);
 
         }
-            
-                
+        
+        try_to_add( tile );
 
-        output_tiles.push( tile );
+        // trace('DONE');
 
-        trace('DONE');
+    }
 
-        // }
+    // 3 different tiles in one (main and 2 other)
+    // Ones and Twos. Threes won't fit 4th different tile.
+    // three_others? is ther only one main piece here?
+    function walk_tilesets_3(?three_others:Bool = false){
+
+        var go_i:Int;
+        var go_j:Int;
+        var go_k:Int;
+
+        for(i in 0...tilesets.length) {
+
+            for(j in 0...tilesets.length) {
+
+                if(!three_others){
+                    // There are only 2 other pieces
+                    go_j = j;
+                    go_i = i;
+
+                    // If one of those is same as MAIN,
+                    // then make it draw Void
+                    if(_main == i) go_i = -1;
+                    if(_main == j) go_j = -1;
+
+                    // Can't be the same, we're drawing
+                    // only different pieces here
+                    if(go_i == go_j) continue;
+
+                    add_pieces_3(go_i, go_j);
+
+                }else{
+                    // There are 3 other pieces!
+                    for(k in 0...tilesets.length) {
+                        go_j = j;
+                        go_i = i;
+                        go_k = k;
+
+                        // If one of those is same as MAIN,
+                        // then make it draw Void
+                        if(_main == i) go_i = -1;
+                        if(_main == j) go_j = -1;
+                        if(_main == k) go_k = -1;
+
+                        // Can't be the same, we're drawing
+                        // only different pieces here
+                        if(go_i == go_j || go_i == go_k || go_j == go_k) continue;
+
+                        add_pieces_3(go_i, go_j, go_k);
+
+                    }
+                }
+
+            }
+        }
 
     }
 
@@ -237,30 +263,14 @@ class Generator {
 
         }
 
-        // 3 different tiles in one (main and 2 other)
-        // Ones and Twos. Threes won't fit 4th different tile.
-        inline function walk_tilesets_3(){
-
-            for(i in 0...tilesets.length) {
-
-                for(j in 0...tilesets.length) {
-
-                    add_pieces_3(i, j);
-
-                }
-            }
-
-        }
-
 
         /**
          * ==========================================================
-         *      2 different pieces     ##############################
+         *      2 different pieces     #################### M + 1 ###
          * ==========================================================
          */
 
-         /* turning off for testing
-
+        
         // Threes (3 pieces of the main tile)
 
         
@@ -411,12 +421,12 @@ class Generator {
         piece_main = T4;
         walk_tilesets_2();
 
-        */
+        
 
 
         /**
          * ==========================================================
-         *      3 different pieces     ##############################
+         *      3 different pieces     ################## M + 2 #####
          * ==========================================================
          */
         
@@ -430,9 +440,9 @@ class Generator {
         // |---+---|
         // |   |   |
         // |---+---|
-        // piece_gen = T2 | T3 | T4;
-        // piece_main = T1;
-        // walk_tilesets_3();
+        piece_gen = T2 | T3 | T4;
+        piece_main = T1;
+        walk_tilesets_3(true);
 
         
         // |---+---|
@@ -440,9 +450,9 @@ class Generator {
         // |---+---|
         // |   |   |
         // |---+---|
-        // piece_gen = T1 | T3 | T4;
-        // piece_main = T2;
-        // walk_tilesets_3();
+        piece_gen = T1 | T3 | T4;
+        piece_main = T2;
+        walk_tilesets_3(true);
 
         
         // |---+---|
@@ -450,9 +460,9 @@ class Generator {
         // |---+---|
         // |   | X |
         // |---+---|
-        // piece_gen = T1 | T2 | T4;
-        // piece_main = T3;
-        // walk_tilesets_3();
+        piece_gen = T1 | T2 | T4;
+        piece_main = T3;
+        walk_tilesets_3(true);
 
         
         // |---+---|
@@ -460,22 +470,22 @@ class Generator {
         // |---+---|
         // | X |   |
         // |---+---|
-        // piece_gen = T1 | T2 | T3;
-        // piece_main = T4;
-        // walk_tilesets_3();
+        piece_gen = T1 | T2 | T3;
+        piece_main = T4;
+        walk_tilesets_3(true);
 
 
         // Twos (2 pieces of the main tile)
 
-        
+        //
         // |---+---|
         // | X |   |
         // |---+---|
         // |   | X |
         // |---+---|
-        // piece_gen = T2 | T4;
-        // piece_main = T1 | T3;
-        // walk_tilesets_3();
+        piece_gen = T2 | T4;
+        piece_main = T1 | T3;
+        walk_tilesets_3();
         
         
         // |---+---|
@@ -483,9 +493,9 @@ class Generator {
         // |---+---|
         // | X |   |
         // |---+---|
-        // piece_gen = T1 | T3;
-        // piece_main = T2 | T4;
-        // walk_tilesets_3();
+        piece_gen = T1 | T3;
+        piece_main = T2 | T4;
+        walk_tilesets_3();
         
         
         // |---+---|
@@ -503,9 +513,9 @@ class Generator {
         // |---+---|
         // |   | X |
         // |---+---|
-        // piece_gen = T1 | T4;
-        // piece_main = T2 | T3;
-        // walk_tilesets_3();
+        piece_gen = T1 | T4;
+        piece_main = T2 | T3;
+        walk_tilesets_3();
         
         
         // |---+---|
@@ -513,9 +523,9 @@ class Generator {
         // |---+---|
         // |   |   |
         // |---+---|
-        // piece_gen = T3 | T4;
-        // piece_main = T1 | T2;
-        // walk_tilesets_3();
+        piece_gen = T3 | T4;
+        piece_main = T1 | T2;
+        walk_tilesets_3();
         
         
         // |---+---|
@@ -523,10 +533,11 @@ class Generator {
         // |---+---|
         // | X | X |
         // |---+---|
-        // piece_gen = T1 | T2;
-        // piece_main = T3 | T4;
-        // walk_tilesets_3();
+        piece_gen = T1 | T2;
+        piece_main = T3 | T4;
+        walk_tilesets_3();
         
+        /**/
     }
 
 
@@ -543,6 +554,8 @@ class Generator {
 
             tile_count = 0;
 
+            // M + 1
+
             // 4 ones (has 3 other tiles)
             tile_count += 4*(l*l*l);
 
@@ -551,6 +564,8 @@ class Generator {
 
             // 4 threes (has 1 other tile)
             tile_count += 4*(l);
+
+            // M + 2
 
         }
 
@@ -568,18 +583,14 @@ class Generator {
 
         w = Math.ceil( Math.sqrt(output_tiles.length) ) * Main.tile_size;
         h = w;
-        // w = 64;
-        // h = 64;
-        // Texture size must be square of 2?
-
 
         var x:Int = 0;
         var y:Int = 0;
         var x2:Int = 0;
         var y2:Int = 0;
 
-        trace('apply_output: ${w}, ${h}');
-        trace('got ${output_tiles.length} tiles in output.');
+        Luxe.events.fire('log.add', 'Output dimensions: ${w}px x ${h}px');
+        Luxe.events.fire('log.add', 'Got ${output_tiles.length} tiles in output.');
 
         var _pixels:Uint8Array = new Uint8Array( w*h*4 );
         var _t:Tile;
@@ -619,7 +630,7 @@ class Generator {
 
         }
         
-        
+        // Create new 'output' texture if it's not in resources yet
         if(Luxe.resources.texture('output') == null){
 
             output = new Texture({
@@ -635,10 +646,66 @@ class Generator {
 
         }else{
 
+            // Already have 'output' texture in resources, go on.
+
             output.width = output.width_actual = w;
             output.height = output.height_actual = h;
             output.submit(_pixels);
         }
+
+        // place the pixels into output_pixels
+        // Gotta swap reds with blues first
+
+        inline function bset(p,v) {
+            return _pixels[p] = v;
+        }
+
+        var p:Int = 0;
+        for( i in 0..._pixels.length >> 2 ) {
+            var r = _pixels[p];
+            var g = _pixels[p + 1];
+            var b = _pixels[p + 2];
+            var a = _pixels[p + 3];
+            bset(p++, b);
+            p++;// bset(p++, g);
+            bset(p++, r);
+            p++;// bset(p++, a);
+        }
+
+        output_pixels = _pixels;
     }
 
+    /**
+     * Loops through every tile in output_tiles
+     * if the given tile already exists - do nothing
+     * add new tile only if it's unique
+     * @param  _t New generated
+     * @return    true if new tile was added to output
+     */
+    function try_to_add( _t:Tile ):Bool{
+
+        var newtile:String = _t.toString();
+
+        for( outile in output_tiles ){
+
+            if( outile.toString() == newtile ){
+#if debug
+                // trace('given tile already exists! ignoring');
+#end
+                return false;
+            }
+
+        }
+
+        output_tiles.push( tile );
+        return true;
+
+    }
+
+}
+
+typedef LayerFlag = {
+
+    var layer:Int;
+    var flag:Int;
 }
