@@ -2,7 +2,7 @@ import luxe.Sprite;
 import phoenix.Texture;
 import luxe.Color;
 import snow.api.buffers.Uint8Array;
-
+import Xml;
 
 class Generator {
 
@@ -12,12 +12,23 @@ class Generator {
     public static inline var T4:Hex = 0x1000;
     public static inline var WHOLE:Hex = 0x1111;
 
+    // How much tiles have we generated?
+    // Could use output_tiles.length...
     var tile_count:Int;
 
+    //
     var tilesets:Array<TileSet>;
 
+    // Each tile is stored here after generating. Use as source.
     var output_tiles:Array<Tile>;
+
+    // 
     public var output:Texture;
+
+    // TSX for the Tiled. Rebuilt after each output generation
+    public var tsx:Xml;
+
+    //
     public var output_pixels:Uint8Array;
 
     public var w:Int = 0;
@@ -38,6 +49,8 @@ class Generator {
 
     // Current MAIN tileset
     var _main:Int;
+
+
 
     public function new() {
 
@@ -71,6 +84,8 @@ class Generator {
 
 
         apply_output();
+
+        rebuild_tsx();
 
         Luxe.events.fire('generator.done');
 
@@ -259,6 +274,30 @@ class Generator {
             for(i in 0...tilesets.length) {
 
                 add_pieces_2(i);
+            }
+
+        }
+
+        /**
+         * ==========================================================
+         *          ORIGINAL           #################### M + 0 ###
+         * ==========================================================
+         */
+        
+        for(i in 0...tilesets.length) {
+
+            var _ts = tilesets[i];
+
+            for(_t in _ts.tiles) {
+
+                // set pieces
+                _t.pieces[0] = (0x0001 & _t.flag > 0) ? i : -1;
+                _t.pieces[1] = (0x0010 & _t.flag > 0) ? i : -1;
+                _t.pieces[2] = (0x0100 & _t.flag > 0) ? i : -1;
+                _t.pieces[3] = (0x1000 & _t.flag > 0) ? i : -1;
+
+                output_tiles.push( _t );
+
             }
 
         }
@@ -699,6 +738,83 @@ class Generator {
 
         output_tiles.push( tile );
         return true;
+
+    }
+
+
+    /**
+     * Rebuilds whole TSX XML object. Use after generating output
+     */
+    function rebuild_tsx() {
+
+        trace('<tileset name="tileset" tilewidth="${Main.tile_size}" tileheight="${Main.tile_size}" tilecount="${output_tiles.length}"></tileset>');
+
+        tsx = Xml.createDocument();
+        tsx.addChild( Xml.parse('<?xml version="1.0" encoding="UTF-8"?>') );
+
+        var _tileset = Xml.createElement('tileset');
+        _tileset.set('name', 'tileset');
+        _tileset.set('tilewidth', '${Main.tile_size}');
+        _tileset.set('tileheight', '${Main.tile_size}');
+        _tileset.set('tilecount', '${output_tiles.length}');
+
+        // Image
+        // 
+        _tileset.addChild( Xml.parse('<image source="output.png" width="${w}" height="${h}"/>') );
+
+
+        // terraintypes
+        // 
+        var _terrains = Xml.createElement('terraintypes');
+
+        for(_tr in tilesets){
+
+            trace('_terrains.addChild ${_tr.name}');
+            // TODO: add preview tile - tile="102"
+            // full tile should be one of the first in output
+            var _terrain = Xml.createElement('terrain');
+            _terrain.set('name', _tr.name);
+
+            _terrains.addChild(_terrain);
+        }
+        _tileset.addChild(_terrains);
+
+
+        // Tiles
+        // 
+        var _tx:Xml;
+        var _tile:Tile;
+        var str:String = '';
+        for(i in 0...output_tiles.length){
+
+            _tx = Xml.createElement('tile');
+            _tile = output_tiles[i];
+
+            _tx.set('id', Std.string(i) );
+
+            // Tiled order of "pieces"
+            // |---+---|
+            // | 1 | 2 |
+            // |---+---|
+            // | 3 | 4 |
+            // |---+---|
+            // Gotta change that
+            str = '';
+            str += (_tile.pieces[0] >= 0) ? Std.string(_tile.pieces[0]) : '';
+            str += ',';
+            str += (_tile.pieces[1] >= 0) ? Std.string(_tile.pieces[1]) : '';
+            str += ',';
+            str += (_tile.pieces[3] >= 0) ? Std.string(_tile.pieces[3]) : '';
+            str += ',';
+            str += (_tile.pieces[2] >= 0) ? Std.string(_tile.pieces[2]) : '';
+
+            _tx.set('terrain', str);
+
+            _tileset.addChild(_tx);
+        }
+
+        tsx.addChild( _tileset );
+        
 
     }
 

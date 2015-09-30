@@ -113,6 +113,9 @@ class Main extends luxe.Game {
         create_window1();
         create_window_tileset();
 
+
+
+
         // Export Bitmap button
         var export_bitmap_button = new mint.Button({
             parent: canvas,
@@ -124,6 +127,20 @@ class Main extends luxe.Game {
         layout.margin(export_bitmap_button, bottom, fixed, 0);
         export_bitmap_button.onmouseup.listen(function(e,_){
             export_bitmap();
+        });
+
+
+        // Export TSX button
+        var export_tsx_button = new mint.Button({
+            parent: canvas,
+            name: 'export_tsx_button',
+            text: 'Export TSX',
+            align: mint.types.Types.TextAlign.center,
+            x: 100, y: Luxe.screen.h-30, w: 100, h: 30,
+        });
+        layout.margin(export_tsx_button, bottom, fixed, 0);
+        export_tsx_button.onmouseup.listen(function(e,_){
+            export_tsx();
         });
     }
 
@@ -152,7 +169,7 @@ class Main extends luxe.Game {
             output_image = new mint.Image({
                 parent: output_scroll,
                 name: 'image_output',
-                x:0, y:0, w:generator.w * 3, h:generator.h * 3,
+                x:0, y:0, w:generator.w * 2, h:generator.h * 2,
                 path: 'output'
             });
         });
@@ -582,10 +599,18 @@ class Main extends luxe.Game {
 
     }
 
+    function prepare_export(){
+
+        if(!sys.FileSystem.exists(sys.FileSystem.absolutePath('output/'))){
+            sys.FileSystem.createDirectory(sys.FileSystem.absolutePath('output/'));
+        }
+
+    }
+
 
     function export_bitmap() {
 
-        generator.output_pixels;
+        prepare_export();
 
         var data = format.png.Tools.build32BGRA( generator.w, generator.h, generator.output_pixels.toBytes() );
 
@@ -593,6 +618,18 @@ class Main extends luxe.Game {
         var out = sys.io.File.write( sys.FileSystem.absolutePath('output/output.png'), true);
         new format.png.Writer(out).write(data);
         add_log('File saved in output/output.png');
+#end
+
+    }
+
+    function export_tsx() {
+
+        prepare_export();
+
+#if desktop
+        var out = sys.io.File.write( sys.FileSystem.absolutePath('output/output.tsx'), false);
+        sys.io.File.saveContent("output/output.tsx", generator.tsx.toString());
+        add_log('File saved in output/output.tsx');
 #end
 
     }

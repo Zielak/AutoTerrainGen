@@ -10,6 +10,8 @@ class TileSet {
 
     public var id:String;
 
+    public var name:String;
+
     public var preview:Sprite;
 
     public var tiles:Array<Tile>;
@@ -17,6 +19,12 @@ class TileSet {
     public function new( t:Texture )
     {
         id = t.id;
+
+#if windows
+        name = id.substring( id.lastIndexOf('\\')+1, id.lastIndexOf('.') );
+#else
+        name = id.substring( id.lastIndexOf('/')+1, id.lastIndexOf('.') );
+#end
 
         texture = t;
 
