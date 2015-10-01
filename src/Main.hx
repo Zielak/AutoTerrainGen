@@ -74,15 +74,15 @@ class Main extends luxe.Game {
         init_events();
         
 #if web
-        load_tileset('/assets/template16.gif');
-        // load_tileset('/assets/dirt16.gif');
-        load_tileset('/assets/grass16.gif');
-        load_tileset('/assets/tiles16.gif');
+        load_tileset('/input/dirt16.gif');
+        load_tileset('/input/template16.gif');
+        load_tileset('/input/grass16.gif');
+        load_tileset('/input/tiles16.gif');
 #elseif desktop
-        load_tileset('assets/template16.gif');
-        // load_tileset('assets/dirt16.gif');
-        load_tileset('assets/grass16.gif');
-        load_tileset('assets/tiles16.gif');
+        load_tileset('input/dirt16.gif');
+        load_tileset('input/template16.gif');
+        load_tileset('input/grass16.gif');
+        load_tileset('input/tiles16.gif');
 #end
 
     } //ready
@@ -287,9 +287,9 @@ class Main extends luxe.Game {
         path_input = new mint.TextEdit({
             parent: window1,
 #if desktop
-            text: 'assets/template16.gif',
+            text: 'input/template16.gif',
 #else
-            text: '/assets/template16.gif',
+            text: '/input/template16.gif',
 #end
             text_size: 12,
             name: 'path',
