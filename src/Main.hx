@@ -372,6 +372,40 @@ class Main extends luxe.Game {
         });
 
 
+        var tilesize_txt = new mint.TextEdit({
+            parent: window1,
+            text: '16',
+            text_size: 16,
+            name: 'tile_size_txt',
+            options: { view: { color:new Color().rgb(0x19191c) } },
+            x: 350, y: 65, w: 50, h: 28,
+        });
+        layout.anchor(tilesize_txt, right, right);
+        tilesize_txt.onchange.listen(function(s:String){
+
+            var i:Int = Math.floor( Std.parseFloat(s) );
+            if(i < 1){
+                add_log('Invalid tile size: ${s} -> ${i}');
+            }
+            if(i > 0){
+                Main.tile_size = i;
+                add_log('Tile size changed to ${Main.tile_size}');
+                if( tilesets.length > 0 ){
+                    add_log('WARNING: tilesets that don\'t match this size can cause problems.');
+                }
+            }
+        });
+        var tilesize_label = new mint.Label({
+            parent: window1,
+            text: 'tile size:',
+            text_size: 14,
+            align: right,
+            x:300, y:65, w:50, h: 28,
+        });
+        layout.anchor(tilesize_label, tilesize_txt, right, left);
+
+
+
 
         generate_button = new mint.Button({
             parent: window1,
