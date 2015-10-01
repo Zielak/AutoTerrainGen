@@ -7,6 +7,7 @@ import luxe.options.SpriteOptions;
 import luxe.Sprite;
 import luxe.Vector;
 import luxe.Text;
+import luxe.Screen;
 import phoenix.Texture;
 
 
@@ -121,7 +122,7 @@ class Main extends luxe.Game {
 
     function refresh_output() {
 
-        output_scroll.h = Math.floor( Luxe.screen.height/2 );
+        output_scroll.h = Math.floor( Luxe.screen.height/2 - 50 );
         output_scroll.y = Math.floor( Luxe.screen.height/2 );
         output_scroll.x = 0;
         output_scroll.w = Math.floor( Luxe.screen.width );
