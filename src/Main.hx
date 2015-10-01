@@ -155,7 +155,8 @@ class Main extends luxe.Game {
 
         disp = new Text({
             name:'display.text',
-            pos: new Vector(Luxe.screen.w-10, Luxe.screen.h-10),
+            bounds: new luxe.Rectangle(10, Luxe.screen.h/2, Luxe.screen.w-20, Luxe.screen.h/2 -10),
+            bounds_wrap: true,
             align: luxe.TextAlign.right,
             align_vertical: luxe.TextAlign.bottom,
             point_size: 15,
@@ -346,9 +347,9 @@ class Main extends luxe.Game {
         path_input = new mint.TextEdit({
             parent: window1,
 #if desktop
-            text: 'input/template16.gif',
+            text: 'input/',
 #else
-            text: '/input/template16.gif',
+            text: '/input/',
 #end
             text_size: 12,
             name: 'path',
@@ -410,7 +411,7 @@ class Main extends luxe.Game {
         generate_button = new mint.Button({
             parent: window1,
             name: 'generate',
-            text: 'Generate!',
+            text: 'GENERATE!',
             options: { view: { color:new Color().rgb(0x008800) } },
             x: 4, y: 95, w: 400, h: 28,
         });

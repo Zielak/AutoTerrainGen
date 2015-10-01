@@ -593,22 +593,31 @@ class Generator {
 
             tile_count = 0;
 
+            // Original
+
+            tile_count = (tilesets.length+1) * 15;
+
             // M + 1
 
-            // 4 ones (has 3 other tiles)
+            // 4 ones (has 3 other pieces)
             tile_count += 4*(l*l*l);
 
-            // 6 twos (has 2 other tiles)
+            // 6 twos (has 2 other pieces)
             tile_count += 6*(l*l);
 
-            // 4 threes (has 1 other tile)
+            // 4 threes (has 1 other piece)
             tile_count += 4*(l);
 
             // M + 2
 
+            // 6 twos (has 2 main pieces)
+            tile_count += 6*(l*l*l);
+
+            // I don't even know
+            tile_count += 4*( l );
         }
 
-        Luxe.events.fire('config_text.update', 'Predicting ${tile_count} tiles.');
+        Luxe.events.fire('config_text.update', '(Wrongly) predicting ${tile_count} tiles...');
 
     }
 
@@ -632,7 +641,6 @@ class Generator {
         Luxe.events.fire('log.add', 'Got ${output_tiles.length} tiles in output.');
 
         var _pixels:Uint8Array = new Uint8Array( w*h*4 );
-        var _t:Tile;
 
         // Get each tile
         for(_t in output_tiles){
