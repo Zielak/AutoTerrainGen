@@ -6,7 +6,7 @@
       height:900,
       title:'Auto Terrain Generator for Tiled',
       fullscreen:false,
-      resizable:true,
+      resizable:false,
       borderless:false
     }
   },

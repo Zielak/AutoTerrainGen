@@ -767,13 +767,12 @@ class Generator {
         // 
         var _terrains = Xml.createElement('terraintypes');
 
-        for(_tr in tilesets){
+        for(i in 0...tilesets.length){
 
-            trace('_terrains.addChild ${_tr.name}');
-            // TODO: add preview tile - tile="102"
-            // full tile should be one of the first in output
+            var _tr:TileSet = tilesets[i];
             var _terrain = Xml.createElement('terrain');
             _terrain.set('name', _tr.name);
+            _terrain.set('tile', i*16);
 
             _terrains.addChild(_terrain);
         }

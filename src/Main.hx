@@ -53,6 +53,8 @@ class Main extends luxe.Game {
     var window_output:mint.Window;
     var output_scroll:mint.Scroll;
     var output_image:mint.Image;
+    var export_bitmap_button:mint.Button;
+    var export_tsx_button:mint.Button;
 
 
     override function config(config:luxe.AppConfig) {
@@ -87,6 +89,54 @@ class Main extends luxe.Game {
 
     } //ready
 
+    override function onwindowresized(event:WindowEvent) {
+
+        return;
+
+        // FAIL
+
+        canvas.w = event.event.x;
+        canvas.h = event.event.y;
+
+
+
+        disp.pos.x = Luxe.screen.w-10;
+        disp.pos.y = Luxe.screen.h-10;
+
+        export_bitmap_button.y = Luxe.screen.h-50;
+        export_tsx_button.y = Luxe.screen.h-50;
+
+        refresh_output();
+        refresh_window1();
+
+        // Luxe.camera.size_mode = luxe.Camera.SizeMode.cover;
+
+        // Luxe.camera.viewport.x = -event.event.x + Luxe.camera.viewport.w;
+        // Luxe.camera.viewport.y = -event.event.y + Luxe.camera.viewport.h;
+
+        trace('Viewport: ${Luxe.camera.viewport.x}, ${Luxe.camera.viewport.y}');
+        trace('Vie_size: ${Luxe.camera.viewport.w}, ${Luxe.camera.viewport.h}');
+
+    }
+
+    function refresh_output() {
+
+        output_scroll.h = Math.floor( Luxe.screen.height/2 );
+        output_scroll.y = Math.floor( Luxe.screen.height/2 );
+        output_scroll.x = 0;
+        output_scroll.w = Math.floor( Luxe.screen.width );
+
+    }
+
+    function refresh_window1() {
+
+        // output_scroll.h = Math.floor( Luxe.screen.height/2 );
+        // output_scroll.y = Math.floor( Luxe.screen.height/2 );
+        
+    }
+
+
+
 
     function init_canvas() {
 
@@ -100,29 +150,31 @@ class Main extends luxe.Game {
             x: 0, y:0, w: Luxe.screen.w, h: Luxe.screen.h
         });
 
+        create_output_window();
+
         disp = new Text({
             name:'display.text',
             pos: new Vector(Luxe.screen.w-10, Luxe.screen.h-10),
             align: luxe.TextAlign.right,
             align_vertical: luxe.TextAlign.bottom,
             point_size: 15,
+            depth: 50,
             text: 'usage text goes here'
         });
 
-        create_window_output();
-        create_window1();
-        create_window_tileset();
+        create_configuration_window();
+        create_tileset_window();
 
 
 
 
         // Export Bitmap button
-        var export_bitmap_button = new mint.Button({
+        export_bitmap_button = new mint.Button({
             parent: canvas,
             name: 'export_bitmap_button',
             text: 'Export Bitmap',
             align: mint.types.Types.TextAlign.center,
-            x: 0, y: Luxe.screen.h-30, w: 100, h: 30,
+            x: 0, y: Luxe.screen.h-50, w: 100, h: 50,
         });
         layout.margin(export_bitmap_button, bottom, fixed, 0);
         export_bitmap_button.onmouseup.listen(function(e,_){
@@ -131,12 +183,12 @@ class Main extends luxe.Game {
 
 
         // Export TSX button
-        var export_tsx_button = new mint.Button({
+        export_tsx_button = new mint.Button({
             parent: canvas,
             name: 'export_tsx_button',
             text: 'Export TSX',
             align: mint.types.Types.TextAlign.center,
-            x: 100, y: Luxe.screen.h-30, w: 100, h: 30,
+            x: 100, y: Luxe.screen.h-50, w: 100, h: 50,
         });
         layout.margin(export_tsx_button, bottom, fixed, 0);
         export_tsx_button.onmouseup.listen(function(e,_){
@@ -266,7 +318,7 @@ class Main extends luxe.Game {
 
     }
 
-    function create_window1() {
+    function create_configuration_window() {
 
         window1 = new mint.Window({
             parent: canvas,
@@ -278,7 +330,7 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:10, y:Luxe.screen.h/2-40, w:400, h: 430,
+            x:10, y:10, w:400, h: 430,
             w_min: 256, h_min:256,
             collapsible:false,
             closable: false,
@@ -350,10 +402,10 @@ class Main extends luxe.Game {
         layout.margin(tilesets_list, right, fixed, 4);
         layout.margin(tilesets_list, bottom, fixed, 4);
 
-    } //create_window1
+    } //create_configuration_window
 
 
-    function create_window_tileset() {
+    function create_tileset_window() {
 
         window_tileset = new mint.Window({
             parent: canvas,
@@ -365,7 +417,7 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:450, y:Luxe.screen.h/2-40, w:150, h: 300,
+            x:450, y:20, w:150, h: 430,
             w_min: 150, h_min:256,
             collapsible:false,
             closable: false,
@@ -385,26 +437,31 @@ class Main extends luxe.Game {
 
         tiles_list = new mint.List({
             parent: window_tileset,
-            name: 'list',
+            name: 'tiles_list',
             x: 6, y: 60, w: 150, h: 60-100-4
         });
         layout.margin(tiles_list, right, fixed, 6);
         layout.margin(tiles_list, bottom, fixed, 8);
 
-    } // create_window_tileset
+    } // create_tileset_window
 
-    function create_window_output(){
+    function create_output_window(){
 
         // Not actually a window...
 
         output_scroll = new mint.Scroll({
             parent: canvas,
-            name: 'scroll1',
-            options: { color_handles:new Color().rgb(0xffffff) },
-            x:0, y:0, w: Luxe.screen.w-10, h: Luxe.screen.h/2 - 50,
+            name: 'output_scroll',
+            options: {
+                color_handles:new Color().rgb(0xffffff),
+                color:new Color().rgb(0x222c33),
+            },
+            x:0, y:Luxe.screen.h/2, w: Luxe.screen.w, h: Luxe.screen.h/2 - 50,
         });
 
-    } // create_window_output
+        refresh_output();
+
+    } // create_output_window
 
     function create_tileset_li(tileset:TileSet) {
 
@@ -416,23 +473,29 @@ class Main extends luxe.Game {
 
         layout.margin(_panel, right, fixed, 8);
 
-        new mint.Image({
+        var _img = new mint.Image({
             parent: _panel, name: 'icon_${tileset.id}',
             x:0, y:0, w:64, h:64,
+            mouse_input:true,
             path: tileset.id
         });
-
-        var _title = new mint.Label({
-            parent: _panel, name: 'label_${tileset.id}',
-            mouse_input:true, x:80, y:8, w:148, h:18, text_size: 16,
-            align: TextAlign.left, align_vertical: TextAlign.top,
-            text: tileset.id,
-        });
-        _title.onmouseup.listen(function(e,ctrl){
+        _img.onmouseup.listen(function(e,ctrl){
             var idx = tilesets_list.items.indexOf(ctrl.parent);
             tileset_preview_show(idx);
         });
-        layout.margin(_title, right, fixed, 8);
+
+        var _title = new mint.TextEdit({
+            parent: _panel,
+            text: tileset.name,
+            text_size: 16,
+            name: 'tileset_name_${tileset.id}',
+            options: { view: { color:new Color().rgb(0x19191c) } },
+            x:80, y:8, w:148, h:18
+        });
+        layout.margin(_title, right, fixed, 0);
+        _title.onchange.listen( function(s:String){
+
+        } );
 
         var _order_up = new mint.Button({
             parent: _panel, name: 'button_${tileset.id}_orderup',
