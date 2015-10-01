@@ -87,7 +87,7 @@ class Tile {
         if(texture != null) return;
 
         var color:C = {r:0, g:0, b:0, a:0};
-        var n = 4;
+        var n = 0;
 
         while( n < _pixels.length ){
 
