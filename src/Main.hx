@@ -236,6 +236,12 @@ class Main extends luxe.Game {
 
         }
 
+        Luxe.events.listen('tilesets_list.rename', function(o:TextEditEvent){
+
+            tilesets[tilesets_list.items.indexOf(o.ctrl)].name = o.text;
+
+        } );
+
         Luxe.events.listen('tilesets_list.goup', function(o:ControlEvent){
 
             var idx = tilesets_list.items.indexOf(o.ctrl);
@@ -494,8 +500,8 @@ class Main extends luxe.Game {
             x:80, y:8, w:148, h:18
         });
         layout.margin(_title, right, fixed, 0);
-        _title.onchange.listen( function(s:String){
-
+        _title.onchange.listen( function(s){
+            Luxe.events.fire('tilesets_list.rename', {text: s, ctrl: _title.parent});
         } );
 
         var _order_up = new mint.Button({
@@ -518,9 +524,6 @@ class Main extends luxe.Game {
         _order_down.onmouseup.listen(function(e,ctrl){
             Luxe.events.fire('tilesets_list.godown', {event: e, ctrl: ctrl.parent});
         });
-
-
-
 
         var _remove = new mint.Button({
             parent: _panel, name: 'button_${tileset.id}_orderdown',
@@ -704,5 +707,9 @@ class Main extends luxe.Game {
 
 typedef ControlEvent = {
      var event:MouseEvent;
+     var ctrl:Control;
+}
+typedef TextEditEvent = {
+     var text:String;
      var ctrl:Control;
 }
