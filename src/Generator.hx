@@ -296,7 +296,11 @@ class Generator {
                 _t.pieces[2] = (0x0100 & _t.flag > 0) ? i : -1;
                 _t.pieces[3] = (0x1000 & _t.flag > 0) ? i : -1;
 
-                output_tiles.push( _t );
+                tile = new Tile();
+
+                main_pieces(_t.flag);
+
+                try_to_add( tile );
 
             }
 
@@ -615,6 +619,7 @@ class Generator {
 
             // I don't even know
             tile_count += 4*( l );
+
         }
 
         Luxe.events.fire('config_text.update', '(Wrongly) predicting ${tile_count} tiles...');
@@ -647,6 +652,12 @@ class Generator {
 
             x2 = 0;
             y2 = 0;
+
+            if(_t == null) continue;
+
+            // trace('_t: ${_t}');
+            // trace('_t.pixels: ${_t.pixels}');
+            // trace('_t.pixels.length: ${_t.pixels.length}');
 
             // Draw each pixel
             for(i in 0..._t.pixels.length){
@@ -735,6 +746,12 @@ class Generator {
 
         for( outile in output_tiles ){
 
+            if(outile == null) continue;
+#if debug
+            // trace('outile: ${outile}');
+            // trace('outile.toString(): ${outile.toString()}');
+            // trace('newtile: ${newtile}');
+#end
             if( outile.toString() == newtile ){
 #if debug
                 // trace('given tile already exists! ignoring');
@@ -749,6 +766,13 @@ class Generator {
 
     }
 
+    function find_tile_by_flag(s:String):Int {
+
+        for( i in 0...output_tiles.length ){
+            if(output_tiles[i].toString() == s ) return i;
+        }
+        return -1;
+    }
 
     /**
      * Rebuilds whole TSX XML object. Use after generating output
@@ -780,7 +804,8 @@ class Generator {
             var _tr:TileSet = tilesets[i];
             var _terrain = Xml.createElement('terrain');
             _terrain.set('name', _tr.name);
-            _terrain.set('tile', '${i*15+14}');
+            var s:String = ''+i+i+i+i;
+            _terrain.set('tile', '${find_tile_by_flag( s )}');
 
             _terrains.addChild(_terrain);
         }
@@ -796,6 +821,8 @@ class Generator {
 
             _tx = Xml.createElement('tile');
             _tile = output_tiles[i];
+
+            if(_tile == null) continue;
 
             _tx.set('id', Std.string(i) );
 
@@ -824,6 +851,9 @@ class Generator {
         
 
     }
+
+
+
 
 }
 
