@@ -772,7 +772,7 @@ class Generator {
             var _tr:TileSet = tilesets[i];
             var _terrain = Xml.createElement('terrain');
             _terrain.set('name', _tr.name);
-            _terrain.set('tile', '${i*16}');
+            _terrain.set('tile', '${i*15+14}');
 
             _terrains.addChild(_terrain);
         }
