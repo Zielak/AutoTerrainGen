@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/Zielak/AutoTerrainGen.png?label=ready&title=Ready)](https://waffle.io/Zielak/AutoTerrainGen)
 # Auto Terrain Generator
 
 > Create terrains for Tiled editor quicker
