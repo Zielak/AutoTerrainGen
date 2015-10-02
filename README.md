@@ -12,7 +12,7 @@ Each tileset should containt every possible tile combination. Use below template
 
 I've tested this tool for generating terrain of 2, 3 and 4 tilesets. Adding more would probably cause longer generation time, and also I'm not sure how would Tiled react to that.
 
-![Template tileset](https://github.com/Zielak/AutoTerrainGen/usage1.gif "template tileset")
+![Template tileset](https://raw.githubusercontent.com/Zielak/AutoTerrainGen/master/usage1.gif "template tileset")
 
 ### 2. Set correct tile size
 
@@ -29,7 +29,7 @@ Here you can:
 - remove tileset
 - click tileset preview to see how the generator split each tile in "Tileset Preview" window
 
-![Load tileset](https://github.com/Zielak/AutoTerrainGen/usage2.png "Load tileset")
+![Load tileset](https://raw.githubusercontent.com/Zielak/AutoTerrainGen/master/usage2.png "Load tileset")
 
 ### 4. Hit GENERATE!
 
