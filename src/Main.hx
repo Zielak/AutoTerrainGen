@@ -4,6 +4,7 @@ import luxe.Input;
 import luxe.Color;
 import luxe.Component;
 import luxe.options.SpriteOptions;
+import luxe.Rectangle;
 import luxe.Sprite;
 import luxe.Vector;
 import luxe.Text;
@@ -54,11 +55,15 @@ class Main extends luxe.Game {
     var window_output:mint.Window;
     var output_scroll:mint.Scroll;
     var output_image:mint.Image;
+    var grid_bg:Sprite;
+
     var export_bitmap_button:mint.Button;
     var export_tsx_button:mint.Button;
 
 
-    override function config(config:luxe.AppConfig) {
+    override public function config(config:luxe.AppConfig) {
+
+        config.preload.textures.push({ id:'input/grid.gif' });
 
         return config;
 
@@ -122,10 +127,15 @@ class Main extends luxe.Game {
 
     function refresh_output() {
 
-        output_scroll.h = Math.floor( Luxe.screen.height/2 - 50 );
-        output_scroll.y = Math.floor( Luxe.screen.height/2 );
-        output_scroll.x = 0;
-        output_scroll.w = Math.floor( Luxe.screen.width );
+        output_scroll.x = Math.floor( Luxe.screen.width/2 );
+        output_scroll.y = 0;
+        output_scroll.w = Math.floor( Luxe.screen.width/2 );
+        output_scroll.h = Math.floor( Luxe.screen.height - 50 - 2 );
+
+        grid_bg.pos.x = Math.floor( Luxe.screen.width/2 );
+        grid_bg.pos.y = 0;
+        grid_bg.size.x = Math.floor( Luxe.screen.width/2 );
+        grid_bg.size.y = Math.floor( Luxe.screen.height - 50 - 2 );
 
     }
 
@@ -155,12 +165,11 @@ class Main extends luxe.Game {
 
         disp = new Text({
             name:'display.text',
-            bounds: new luxe.Rectangle(10, Luxe.screen.h/2, Luxe.screen.w-20, Luxe.screen.h/2 -10),
+            bounds: new luxe.Rectangle(10, Luxe.screen.h/2, Luxe.screen.w/2-20, Luxe.screen.h/2 -10),
             bounds_wrap: true,
             align: luxe.TextAlign.right,
             align_vertical: luxe.TextAlign.bottom,
             point_size: 15,
-            depth: 50,
             text: 'usage text goes here'
         });
 
@@ -176,7 +185,7 @@ class Main extends luxe.Game {
             name: 'export_bitmap_button',
             text: 'Export Bitmap',
             align: mint.types.Types.TextAlign.center,
-            x: 0, y: Luxe.screen.h-50, w: 100, h: 50,
+            x: Luxe.screen.w/2, y: Luxe.screen.h-50, w: 100, h: 50,
         });
         layout.margin(export_bitmap_button, bottom, fixed, 0);
         export_bitmap_button.onmouseup.listen(function(e,_){
@@ -190,7 +199,7 @@ class Main extends luxe.Game {
             name: 'export_tsx_button',
             text: 'Export TSX',
             align: mint.types.Types.TextAlign.center,
-            x: 100, y: Luxe.screen.h-50, w: 100, h: 50,
+            x: Luxe.screen.w/2+102, y: Luxe.screen.h-50, w: 100, h: 50,
         });
         layout.margin(export_tsx_button, bottom, fixed, 0);
         export_tsx_button.onmouseup.listen(function(e,_){
@@ -459,7 +468,7 @@ class Main extends luxe.Game {
                 label: { color:new Color().rgb(0x06b4fb) },
                 close_button: { color:new Color().rgb(0x06b4fb) },
             },
-            x:450, y:20, w:150, h: 430,
+            x:430, y:10, w:150, h: 430,
             w_min: 150, h_min:256,
             collapsible:false,
             closable: false,
@@ -496,10 +505,23 @@ class Main extends luxe.Game {
             name: 'output_scroll',
             options: {
                 color_handles:new Color().rgb(0xffffff),
-                color:new Color().rgb(0x222c33),
+                color:new Color(0.13, 0.17, 0.2, 0.5),
             },
-            x:0, y:Luxe.screen.h/2, w: Luxe.screen.w, h: Luxe.screen.h/2 - 50,
+            x:Luxe.screen.w/2, y:0, w: Luxe.screen.w/2, h: Luxe.screen.h/2 - 50 - 2,
         });
+
+        // Chess background
+        grid_bg = new Sprite({
+            name:'grid_bg',
+            texture: Luxe.resources.texture('input/grid.gif'),
+            uv: new Rectangle(0, 0, Luxe.screen.w/2, Luxe.screen.h - 52),
+            centered: false,
+            size: new Vector(Luxe.screen.w/2, Luxe.screen.h - 52),
+            pos: new Vector(Luxe.screen.w/2, 0),
+            depth: -1,
+        });
+        grid_bg.texture.filter_mag = grid_bg.texture.filter_min = nearest;
+        grid_bg.texture.clamp_s = grid_bg.texture.clamp_t = repeat;
 
         refresh_output();
 
