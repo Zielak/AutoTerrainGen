@@ -13,7 +13,7 @@
 
   project : {
     name : 'AutoTerrainGen',
-    version : '0.1.1',
+    version : '0.1.2',
     author : 'Darek Greenly',
 
     app : {
@@ -22,7 +22,8 @@
       web : {
         libs : {
           FileSaver: 'FileSaver.min.js',
-          pako: 'pako.min.js'
+          pako: 'pako.min.js',
+          FireEvent: 'FireEvent.js'
         }
       }
     },
@@ -40,7 +41,9 @@
     files : {
       assets : 'input/',
       FileSaver : 'jslibs/FileSaver.min.js => FileSaver.min.js',
-      pako: 'jslibs/pako.min.js => pako.min.js'
+      pako: 'jslibs/pako.min.js => pako.min.js',
+      FireEvent: 'jslibs/FireEvent.js => FireEvent.js',
+      index: { path:'custom_index.html => index.html', template:'project', not_listed:true }
     }
 
   }

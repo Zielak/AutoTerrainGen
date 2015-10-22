@@ -60,6 +60,10 @@ class Main extends luxe.Game {
     var export_bitmap_button:mint.Button;
     var export_tsx_button:mint.Button;
 
+#if web
+    var fileOpener:js.FileOpener;
+#end
+
 
     override public function config(config:luxe.AppConfig) {
 
@@ -82,6 +86,7 @@ class Main extends luxe.Game {
         init_events();
         
 #if web
+        fileOpener = new js.FileOpener();
         load_tileset('/input/dirt16.gif');
         load_tileset('/input/template16.gif');
         load_tileset('/input/grass16.gif');
@@ -353,19 +358,17 @@ class Main extends luxe.Game {
             closable: false,
         });
 
+#if desktop
         path_input = new mint.TextEdit({
             parent: window1,
-#if desktop
             text: 'input/',
-#else
-            text: '/input/',
-#end
             text_size: 12,
             name: 'path',
             options: { view: { color:new Color().rgb(0x19191c) } },
             x: 4, y: 35, w: 340, h: 28,
         });
         layout.margin(path_input, right, fixed, 58);
+#end
 
 
 
@@ -374,11 +377,28 @@ class Main extends luxe.Game {
             name: 'load',
             text: 'LOAD',
             options: { view: { color:new Color().rgb(0x008800) } },
+#if desktop
             x: 345, y: 35, w: 54, h: 28,
+#elseif web
+            x: 4, y: 35, w: 340, h: 28,
+#end
         });
         layout.anchor(load_button, right, right);
         load_button.onmouseup.listen(function(e,_){
+#if desktop
             load_tileset( path_input.text );
+#elseif web
+            fileOpener.open(function(e:Texture) {
+                // code taken from load_tileset
+                // TODO: abstract it out to keep things DRY
+                var ts:TileSet = new TileSet(e);
+                tilesets_list.add_item( create_tileset_li(ts) );
+
+                tilesets.push(ts);
+
+                generator.update_tilesets(tilesets);
+            });
+#end
         });
 
 
