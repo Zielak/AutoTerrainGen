@@ -725,9 +725,11 @@ class Main extends luxe.Game {
 
     function prepare_export(){
 
+#if !web
         if(!sys.FileSystem.exists(sys.FileSystem.absolutePath('output/'))){
             sys.FileSystem.createDirectory(sys.FileSystem.absolutePath('output/'));
         }
+#end
 
     }
 
@@ -736,12 +738,16 @@ class Main extends luxe.Game {
 
         prepare_export();
 
-        var data = format.png.Tools.build32BGRA( generator.w, generator.h, generator.output_pixels.toBytes() );
-
 #if desktop
+        var data = format.png.Tools.build32BGRA( generator.w, generator.h, generator.output_pixels.toBytes() );
         var out = sys.io.File.write( sys.FileSystem.absolutePath('output/output.png'), true);
         new format.png.Writer(out).write(data);
         add_log('File saved in output/output.png');
+#elseif web
+        var data:js.html.Uint8Array = js.BuildPNG.build(generator.w, generator.h, generator.output_pixels.toBytes());
+        var blob:js.html.Blob = new js.html.Blob([data], {type: 'image/png'});
+        js.html.FileSaver.saveAs(blob, "output.png");
+        add_log("File saved as output.png");
 #end
 
     }
@@ -754,6 +760,10 @@ class Main extends luxe.Game {
         var out = sys.io.File.write( sys.FileSystem.absolutePath('output/output.tsx'), false);
         sys.io.File.saveContent("output/output.tsx", generator.tsx.toString());
         add_log('File saved in output/output.tsx');
+#elseif web
+        var blob:js.html.Blob = new js.html.Blob([generator.tsx.toString()], {type: 'text/xml;charset=utf8'});
+        js.html.FileSaver.saveAs(blob, "output.tsx");
+        add_log('File saved as output.tsx');
 #end
 
     }

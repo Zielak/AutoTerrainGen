@@ -18,7 +18,13 @@
 
     app : {
       name : 'AutoTerrainGen',
-      package : 'com.darekgreenly.AutoTerrainGen'
+      package : 'com.darekgreenly.AutoTerrainGen',
+      web : {
+        libs : {
+          FileSaver: 'FileSaver.min.js',
+          pako: 'pako.min.js'
+        }
+      }
     },
 
     build : {
@@ -26,11 +32,15 @@
         luxe : '*',
         mint: '*',
         format: '*',
+        FileSaver: '*',
+        pako: '*'
       }
     },
 
     files : {
-      assets : 'input/'
+      assets : 'input/',
+      FileSaver : 'jslibs/FileSaver.min.js => FileSaver.min.js',
+      pako: 'jslibs/pako.min.js => pako.min.js'
     }
 
   }
