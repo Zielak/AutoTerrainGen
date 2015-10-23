@@ -6,7 +6,11 @@
         <link rel="icon" href="favicon.png"/>
         <meta charset="utf-8">
 
-        <style> #window1 { margin: 0; padding: 0; } </style>
+        <style>
+        html { height:100%; }
+        body { height: 100%; padding: 0; margin: 0; background-color: #111111; }
+        #window1 { margin: 0; padding: 0; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        </style>
 
         {{#each project.app.web.libs~}}
             <script type="text/javascript" src="{{this}}"></script>
@@ -14,7 +18,7 @@
 
     </head>
 
-    <body style="padding: 0; margin: 0; background-color: #111111;">
+    <body>
         <input type="file" id="filePicker" accept="image/*" hidden/>
         <script type="text/javascript" src="./{{project.app.name}}{{#if project.app.web.min}}.min{{/if}}.js"></script>
     </body>
