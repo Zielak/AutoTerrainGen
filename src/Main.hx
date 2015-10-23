@@ -383,7 +383,13 @@ class Main extends luxe.Game {
             x: 4, y: 35, w: 340, h: 28,
 #end
         });
+#if desktop
         layout.anchor(load_button, right, right);
+#elseif web
+        layout.margin(load_button, right, fixed, 4);
+#end
+
+
         load_button.onmouseup.listen(function(e,_){
 #if desktop
             load_tileset( path_input.text );
