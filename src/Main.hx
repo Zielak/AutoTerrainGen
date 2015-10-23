@@ -60,6 +60,10 @@ class Main extends luxe.Game {
     var export_bitmap_button:mint.Button;
     var export_tsx_button:mint.Button;
 
+#if web
+    var fileOpener:js.FileOpener;
+#end
+
 
     override public function config(config:luxe.AppConfig) {
 
@@ -82,6 +86,7 @@ class Main extends luxe.Game {
         init_events();
         
 #if web
+        fileOpener = new js.FileOpener();
         load_tileset('/input/dirt16.gif');
         load_tileset('/input/template16.gif');
         load_tileset('/input/grass16.gif');
@@ -353,19 +358,17 @@ class Main extends luxe.Game {
             closable: false,
         });
 
+#if desktop
         path_input = new mint.TextEdit({
             parent: window1,
-#if desktop
             text: 'input/',
-#else
-            text: '/input/',
-#end
             text_size: 12,
             name: 'path',
             options: { view: { color:new Color().rgb(0x19191c) } },
             x: 4, y: 35, w: 340, h: 28,
         });
         layout.margin(path_input, right, fixed, 58);
+#end
 
 
 
@@ -374,11 +377,28 @@ class Main extends luxe.Game {
             name: 'load',
             text: 'LOAD',
             options: { view: { color:new Color().rgb(0x008800) } },
+#if desktop
             x: 345, y: 35, w: 54, h: 28,
+#elseif web
+            x: 4, y: 35, w: 340, h: 28,
+#end
         });
         layout.anchor(load_button, right, right);
         load_button.onmouseup.listen(function(e,_){
+#if desktop
             load_tileset( path_input.text );
+#elseif web
+            fileOpener.open(function(e:Texture) {
+                // code taken from load_tileset
+                // TODO: abstract it out to keep things DRY
+                var ts:TileSet = new TileSet(e);
+                tilesets_list.add_item( create_tileset_li(ts) );
+
+                tilesets.push(ts);
+
+                generator.update_tilesets(tilesets);
+            });
+#end
         });
 
 
@@ -725,9 +745,11 @@ class Main extends luxe.Game {
 
     function prepare_export(){
 
+#if !web
         if(!sys.FileSystem.exists(sys.FileSystem.absolutePath('output/'))){
             sys.FileSystem.createDirectory(sys.FileSystem.absolutePath('output/'));
         }
+#end
 
     }
 
@@ -736,12 +758,16 @@ class Main extends luxe.Game {
 
         prepare_export();
 
-        var data = format.png.Tools.build32BGRA( generator.w, generator.h, generator.output_pixels.toBytes() );
-
 #if desktop
+        var data = format.png.Tools.build32BGRA( generator.w, generator.h, generator.output_pixels.toBytes() );
         var out = sys.io.File.write( sys.FileSystem.absolutePath('output/output.png'), true);
         new format.png.Writer(out).write(data);
         add_log('File saved in output/output.png');
+#elseif web
+        var data:js.html.Uint8Array = js.BuildPNG.build(generator.w, generator.h, generator.output_pixels.toBytes());
+        var blob:js.html.Blob = new js.html.Blob([data], {type: 'image/png'});
+        js.html.FileSaver.saveAs(blob, "output.png");
+        add_log("File saved as output.png");
 #end
 
     }
@@ -754,6 +780,10 @@ class Main extends luxe.Game {
         var out = sys.io.File.write( sys.FileSystem.absolutePath('output/output.tsx'), false);
         sys.io.File.saveContent("output/output.tsx", generator.tsx.toString());
         add_log('File saved in output/output.tsx');
+#elseif web
+        var blob:js.html.Blob = new js.html.Blob([generator.tsx.toString()], {type: 'text/xml;charset=utf8'});
+        js.html.FileSaver.saveAs(blob, "output.tsx");
+        add_log('File saved as output.tsx');
 #end
 
     }

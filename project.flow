@@ -13,12 +13,19 @@
 
   project : {
     name : 'AutoTerrainGen',
-    version : '0.1.1',
+    version : '0.1.2',
     author : 'Darek Greenly',
 
     app : {
       name : 'AutoTerrainGen',
-      package : 'com.darekgreenly.AutoTerrainGen'
+      package : 'com.darekgreenly.AutoTerrainGen',
+      web : {
+        libs : {
+          FileSaver: 'FileSaver.min.js',
+          pako: 'pako.min.js',
+          FireEvent: 'FireEvent.js'
+        }
+      }
     },
 
     build : {
@@ -26,11 +33,17 @@
         luxe : '*',
         mint: '*',
         format: '*',
+        FileSaver: '*',
+        pako: '*'
       }
     },
 
     files : {
-      assets : 'input/'
+      assets : 'input/',
+      FileSaver : 'jslibs/FileSaver.min.js => FileSaver.min.js',
+      pako: 'jslibs/pako.min.js => pako.min.js',
+      FireEvent: 'jslibs/FireEvent.js => FireEvent.js',
+      index: { path:'custom_index.html => index.html', template:'project', not_listed:true }
     }
 
   }
